@@ -47,7 +47,7 @@ Status key: `[x]` done · `[~]` partial · `[ ]` not started
 
 - [~] Feature folders — **Service Lead** (`src/features/service-lead/`, 11 files); home/workplace block components co-located under `components/home|workplace/`
 - [x] Feature folder: `features/client/` (PatientProfile, panels, appointments, notes)
-- [ ] Feature folder: `features/calendar/`
+- [x] Feature folder: `features/calendar/` (`CalendarPage`, `CalendarModule`)
 - [ ] Feature folder: `features/workplace/` (promote from `components/workplace/`)
 - [ ] Feature folder: `features/home/` (promote from `components/home/`)
 - [ ] Feature folder: `features/profile/` (promote `components/profile/`)
@@ -60,10 +60,10 @@ Status key: `[x]` done · `[~]` partial · `[ ]` not started
 
 ### Pillar 2 — Unidirectional data flow
 
-- [~] TanStack Query — **clients + workplace contexts** in `AppLayout`; **org config + overview** in `orgQueries.js`; **appointments** in `appointmentQueries.js`
+- [~] TanStack Query — **clients + workplace contexts** in `AppLayout`; **org config + overview** in `orgQueries.js`; **appointments** in `appointmentQueries.js`; **progress notes** in `progressNoteQueries.js`; **workplace team** in `workplaceQueries.js`
 - [x] Query slice: appointments (`CalendarModule`, `ClientAppointmentsIndex`, `UpcomingAppointments`, `AppointmentEditor`)
-- [ ] Query slice: progress notes (`ProgressNotesPage`, `NotesHistoryPanel`)
-- [ ] Query slice: workplace / team (`Workplace`, `WorkplaceTeamMember`)
+- [x] Query slice: progress notes (`ProgressNotesPage`, `NotesHistoryPanel`)
+- [x] Query slice: workplace / team (`WorkplaceDashboard`, `WorkplaceTeamMember`, join/invite panels)
 - [ ] Audit Outlet context — remove redundant props as hooks replace them (per domain, not big-bang)
 
 ### Pillar 3 — Headless core logic
@@ -155,8 +155,8 @@ npm run lint        # optional; fix only new issues in touched files
 
 **Manual smoke personas:**
 
-- **Daniel — Clinical Lead** — client add/edit, appointments, home dashboard
-- **Ben — Service Lead** — all `/service-lead/*` tabs, both Light Chroma and Dark Studio themes
+- **Ben — Clinical Lead** — client add/edit, appointments, home dashboard
+- **Daniel — Service Lead** — all `/service-lead/*` tabs, both Light Chroma and Dark Studio themes
 
 ---
 

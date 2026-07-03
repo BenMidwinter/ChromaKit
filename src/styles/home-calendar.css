@@ -560,6 +560,45 @@
   color: var(--col-accent);
 }
 
+.home-workplace-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.home-workplace-scope__label {
+  min-width: 0;
+}
+
+.home-workplace-scope__btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--col-primary-dark);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.home-workplace-scope__btn:hover {
+  background: color-mix(in srgb, var(--col-primary-light) 45%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--col-primary) 35%, var(--border-light));
+}
+
+.home-workplace-scope__btn:focus-visible {
+  outline: 2px solid var(--col-primary);
+  outline-offset: 2px;
+}
+
 .role-block__desc {
   margin: 0.3rem 0 0;
   font-size: 0.875rem;

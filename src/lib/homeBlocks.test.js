@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { db } from './data/collections'
 import {
   appointmentAssignedToClinician,
+  filterHomeOversightWorkplaces,
   getPersonalUpcomingAppointments,
   getPersonalActiveCases,
   getWorkplaceUpcomingAppointments,
   getWorkplaceActiveCases,
 } from './homeBlocks'
+import { getWorkplaceContextsForUser } from './store'
 
 describe('homeBlocks assignment filters', () => {
   it('matches appointments by clinician_id or assigned_therapist name', () => {
@@ -17,13 +19,13 @@ describe('homeBlocks assignment filters', () => {
     )).toBe(true)
     expect(appointmentAssignedToClinician(
       { clinician_id: 'user-sarah', assigned_therapist: 'Sarah' },
-      'user-daniel',
-      'Daniel',
+      'user-ben',
+      'Ben',
     )).toBe(false)
     expect(appointmentAssignedToClinician(
-      { assigned_therapist: 'Daniel' },
-      'user-daniel',
-      'Daniel',
+      { assigned_therapist: 'Ben' },
+      'user-ben',
+      'Ben',
     )).toBe(true)
   })
 
@@ -33,9 +35,23 @@ describe('homeBlocks assignment filters', () => {
     expect(upcoming.every(a => a.assigned_therapist === 'Sarah')).toBe(true)
   })
 
-  it('returns only Daniel personal active cases', () => {
-    const cases = getPersonalActiveCases('user-daniel', 'wp-chroma')
-    expect(cases.every(c => c.user_id === 'user-daniel')).toBe(true)
+  it('returns Ben personal upcoming across all workplaces when unscoped', () => {
+    const chromaOnly = getPersonalUpcomingAppointments('user-ben', 'Ben', 'wp-chroma')
+    const allSites = getPersonalUpcomingAppointments('user-ben', 'Ben', null)
+    expect(allSites.length).toBeGreaterThanOrEqual(chromaOnly.length)
+    expect(allSites.some(a => a.client_id === 'client-5')).toBe(true)
+  })
+
+  it('lists leadership workplaces for Ben without using global context', () => {
+    const contexts = getWorkplaceContextsForUser('user-ben')
+    const oversight = filterHomeOversightWorkplaces(contexts)
+    expect(oversight).toHaveLength(2)
+    expect(oversight.map(w => w.id).sort()).toEqual(['wp-chroma', 'wp-east'])
+  })
+
+  it('returns only Ben personal active cases', () => {
+    const cases = getPersonalActiveCases('user-ben', 'wp-chroma')
+    expect(cases.every(c => c.user_id === 'user-ben')).toBe(true)
   })
 
   it('returns workplace-wide upcoming and cases for Chroma', () => {
@@ -52,8 +68,8 @@ describe('homeBlocks assignment filters', () => {
 
     expect(cases.every(c => c.workplace_id === 'wp-chroma' && c.is_active)).toBe(true)
 
-    const danielCases = getPersonalActiveCases('user-daniel', 'wp-chroma')
+    const benCases = getPersonalActiveCases('user-ben', 'wp-chroma')
     const sarahCases = getPersonalActiveCases('user-sarah', 'wp-chroma')
-    expect(danielCases.length + sarahCases.length).toBeGreaterThanOrEqual(cases.length)
+    expect(benCases.length + sarahCases.length).toBeGreaterThanOrEqual(cases.length)
   })
 })

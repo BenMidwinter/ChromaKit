@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom'
 import RichTextEditor from '../../components/RichTextEditor'
 import { getProfile } from '../../lib/store'
-import { buildMergeContext } from '../../lib/mergeFields'
+import { buildDemoTemplateMergeContext } from '../../lib/demoPersonas'
 import { useToast } from '../../components/ui'
 import {
   useLetterTemplateQuery,
@@ -11,12 +11,7 @@ import {
 } from '../../lib/orgQueries'
 import OrgConfigBlock from './blocks/OrgConfigBlock'
 
-const DEMO_MERGE_CONTEXT = buildMergeContext({
-  client: { real_name: 'Alex Johnson', dob: '2008-04-12' },
-  appointment: null,
-  profile: { full_name: 'Ben Midwinter', job_title: 'Music Therapist', hcpc_number: 'MT12345' },
-  sessionDate: '2026-06-26',
-})
+const DEMO_MERGE_CONTEXT = buildDemoTemplateMergeContext()
 
 export default function ServiceLeadLetterTemplateEditor() {
   const { templateId } = useParams()

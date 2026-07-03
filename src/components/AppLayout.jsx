@@ -44,7 +44,7 @@ export default function AppLayout() {
         name: activePersona.name,
         full_name: profile?.full_name || activePersona.name,
         isAdmin: demoRole === ROLES.ADMINISTRATOR || demoRole === ROLES.SERVICE_LEAD,
-        isServiceLead: demoRole === ROLES.SERVICE_LEAD,
+        isServiceLead: activePersona.serviceLead === true,
       },
     }
   }, [activePersona, demoRole])
@@ -84,15 +84,20 @@ export default function AppLayout() {
     return { ...baseWorkplace, effectiveRole: workplaceRoleForDemo(demoRole) }
   }, [baseWorkplace, demoRole])
 
+  const { refreshClients, refreshMemberships } = useStoreRefreshers()
+
   const handlePersonaChange = useCallback((nextPersonaId) => {
     setPersonaId(nextPersonaId)
+    setActiveWorkplaceId(null)
+    refreshMemberships()
+    refreshClients()
     const next = getPersonaById(nextPersonaId)
     if (next.role === ROLES.SERVICE_LEAD) {
       navigate('/service-lead')
     } else if (location.pathname.startsWith('/service-lead')) {
       navigate('/home')
     }
-  }, [location.pathname, navigate])
+  }, [location.pathname, navigate, refreshClients, refreshMemberships])
 
   const handleBuildingClick = useCallback(() => {
     if (demoRole === ROLES.SERVICE_LEAD) {
@@ -110,12 +115,9 @@ export default function AppLayout() {
   })
   const clients = useMemo(() => clientsQuery.data ?? [], [clientsQuery.data])
 
-  const { refreshClients, refreshMemberships } = useStoreRefreshers()
-
   useEffect(() => { setMenuOpen(false) }, [location.pathname])
 
   const isProgressNotes = location.pathname.includes('/progress-notes')
-  const isServiceLead = location.pathname.startsWith('/service-lead')
 
   return (
     <div className="app-shell">

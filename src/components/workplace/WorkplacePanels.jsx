@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
+import { searchWorkplacesForUser } from '../../lib/store'
 import {
-  getMyMembershipRequests,
-  searchWorkplacesForUser,
-  requestWorkplaceMembership,
-} from '../../lib/store'
+  useMyMembershipRequestsQuery,
+  useRequestWorkplaceMembershipMutation,
+} from '../../lib/workplaceQueries'
 
 function requestStatusLabel(status) {
   if (status === 'pending') return 'Pending'
@@ -12,29 +12,29 @@ function requestStatusLabel(status) {
   return status
 }
 
-export function FindWorkplacePanel({ userId, revision, onChanged }) {
+export function FindWorkplacePanel({ userId, onChanged }) {
   const [query, setQuery] = useState('')
   const [message, setMessage] = useState('')
   const [selectedId, setSelectedId] = useState(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const { data: myRequests = [] } = useMyMembershipRequestsQuery(userId)
+  const requestMutation = useRequestWorkplaceMembershipMutation()
 
   const results = useMemo(
     () => (query.trim().length >= 2 ? searchWorkplacesForUser(userId, query) : []),
     [userId, query],
   )
 
-  const myRequests = useMemo(() => getMyMembershipRequests(userId), [userId, revision])
-
   const handleRequest = async (workplaceId) => {
     setError('')
     setBusy(true)
     try {
-      requestWorkplaceMembership(userId, workplaceId, message)
+      await requestMutation.mutateAsync({ userId, workplaceId, message })
       setMessage('')
       setQuery('')
       setSelectedId(null)
-      onChanged()
+      onChanged?.()
     } catch (err) {
       setError(err.message)
     } finally {

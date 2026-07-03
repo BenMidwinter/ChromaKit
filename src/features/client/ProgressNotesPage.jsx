@@ -15,15 +15,17 @@ import { buildMergeContext } from '../../lib/mergeFields'
 import { MODALITY_OPTIONS } from '../../lib/intakeForm'
 import { formatDisplayDate, DEMO_TODAY } from '../../lib/dateArchitecture'
 import {
-  getProgressNotes,
-  getProgressNote,
-  getProgressNoteByAppointment,
   getAppointment,
-  saveProgressNote,
   getProfile,
-  getAvailableProgressNoteTemplates,
   APPOINTMENT_TYPES,
 } from '../../lib/store'
+import {
+  useClientProgressNotesQuery,
+  useProgressNoteQuery,
+  useProgressNoteByAppointmentQuery,
+  useAvailableProgressNoteTemplatesQuery,
+  useSaveProgressNoteMutation,
+} from '../../lib/progressNoteQueries'
 import {
   formatAppointmentDateTime,
   formatAppointmentDate,
@@ -171,13 +173,11 @@ function ProgressNotesPageContent() {
   const toast = useToast()
   const confirm = useConfirm()
 
-  const [notes, setNotes] = useState([])
   const [title, setTitle] = useState('')
   const [sessionDate, setSessionDate] = useState(DEMO_TODAY)
   const [content, setContent] = useState('<p></p>')
   const [activeNoteId, setActiveNoteId] = useState(null)
   const [previewNoteId, setPreviewNoteId] = useState(null)
-  const [saving, setSaving] = useState(false)
   const [prefillReady, setPrefillReady] = useState(false)
   const [editorVersion, setEditorVersion] = useState(0)
   const [modalityUsed, setModalityUsed] = useState('')
@@ -185,6 +185,17 @@ function ProgressNotesPageContent() {
   const [artworkAttachments, setArtworkAttachments] = useState([])
   const [noteEditor, setNoteEditor] = useState(null)
   const [railTab, setRailTab] = useState(RAIL_TABS.INSIGHTS)
+
+  const { data: notes = [] } = useClientProgressNotesQuery(client?.id)
+  const { data: noteFromUrl, isPending: noteFromUrlPending } = useProgressNoteQuery(noteParam, {
+    enabled: Boolean(noteParam && client?.id && !appointmentParam),
+  })
+  const { data: noteFromAppointment, isPending: noteFromAppointmentPending } = useProgressNoteByAppointmentQuery(appointmentParam, {
+    enabled: Boolean(appointmentParam && client?.id),
+  })
+  const { data: noteTemplates = [] } = useAvailableProgressNoteTemplatesQuery(client?.workplace_id)
+  const saveNoteMutation = useSaveProgressNoteMutation()
+  const saving = saveNoteMutation.isPending
 
   const linkedAppointment = useMemo(() => {
     if (!appointmentParam || !client?.id) return null
@@ -196,20 +207,10 @@ function ProgressNotesPageContent() {
   const isStandalone = !linkedAppointment
   const clinicianProfile = session?.user?.id ? getProfile(session.user.id) : null
 
-  const noteTemplates = useMemo(
-    () => getAvailableProgressNoteTemplates(client?.workplace_id),
-    [client?.workplace_id],
-  )
-
-  const refreshNotes = () => setNotes(getProgressNotes(client?.id))
-
-  useEffect(() => {
-    if (client?.id) refreshNotes()
-  }, [client?.id])
-
   useEffect(() => {
     if (noteParam && client?.id && !appointmentParam) {
-      const existing = getProgressNote(noteParam)
+      if (noteFromUrlPending) return
+      const existing = noteFromUrl
       if (existing && existing.client_id === client.id) {
         setTitle(existing.title)
         setContent(existing.content)
@@ -243,7 +244,9 @@ function ProgressNotesPageContent() {
       return
     }
 
-    const existing = getProgressNoteByAppointment(appointmentParam)
+    if (noteFromAppointmentPending) return
+
+    const existing = noteFromAppointment
     if (existing) {
       setTitle(existing.title)
       setContent(existing.content)
@@ -265,7 +268,16 @@ function ProgressNotesPageContent() {
     setArtworkAttachments([])
     setActiveNoteId(null)
     setPrefillReady(true)
-  }, [appointmentParam, noteParam, client?.id, linkedAppointment])
+  }, [
+    appointmentParam,
+    noteParam,
+    client?.id,
+    linkedAppointment,
+    noteFromUrl,
+    noteFromUrlPending,
+    noteFromAppointment,
+    noteFromAppointmentPending,
+  ])
 
   const noteHeading = activeNoteId
     ? (isStandalone ? 'Progress note' : 'Session note')
@@ -334,28 +346,31 @@ function ProgressNotesPageContent() {
       toast.error('Session unavailable — please refresh the page.')
       return
     }
-    setSaving(true)
-    try {
-      const saved = saveProgressNote({
-        id: activeNoteId || undefined,
-        client_id: client.id,
-        appointment_id: linkedAppointment?.id ?? null,
-        title: title.trim(),
-        content,
-        session_date: sessionDate,
-        modality_used: modalityUsed || null,
-        therapeutic_theme: therapeuticTheme.trim(),
-        artwork_attachments: artworkAttachments,
-      }, session.user.id)
-      setActiveNoteId(saved.id)
-      refreshNotes()
-      refreshClients?.()
-      if (isStandalone && !noteParam) {
-        navigate(`/clients/${client.id}/progress-notes?note=${saved.id}`, { replace: true })
-      }
-    } finally {
-      setSaving(false)
-    }
+    saveNoteMutation.mutate(
+      {
+        payload: {
+          id: activeNoteId || undefined,
+          client_id: client.id,
+          appointment_id: linkedAppointment?.id ?? null,
+          title: title.trim(),
+          content,
+          session_date: sessionDate,
+          modality_used: modalityUsed || null,
+          therapeutic_theme: therapeuticTheme.trim(),
+          artwork_attachments: artworkAttachments,
+        },
+        userId: session.user.id,
+      },
+      {
+        onSuccess: (saved) => {
+          setActiveNoteId(saved.id)
+          refreshClients?.()
+          if (isStandalone && !noteParam) {
+            navigate(`/clients/${client.id}/progress-notes?note=${saved.id}`, { replace: true })
+          }
+        },
+      },
+    )
   }
 
   if (!prefillReady) return null

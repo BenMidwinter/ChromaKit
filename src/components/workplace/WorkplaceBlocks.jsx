@@ -73,7 +73,6 @@ export default function WorkplaceClinicianBlock({
   session,
   myWorkplace,
   members,
-  revision,
   onChanged,
 }) {
   return (
@@ -88,7 +87,7 @@ export default function WorkplaceClinicianBlock({
         </div>
       )}
 
-      <FindWorkplacePanel userId={session.user.id} revision={revision} onChanged={onChanged} />
+      <FindWorkplacePanel userId={session.user.id} onChanged={onChanged} />
     </RoleBlockShell>
   )
 }
@@ -99,7 +98,6 @@ export function WorkplaceManagementBlock({
   workplaceId,
   userId,
   members,
-  revision,
   onChanged,
   onRoleChange,
   roleBusyId,
@@ -128,7 +126,6 @@ export function WorkplaceManagementBlock({
         workplaceId={workplaceId}
         userId={userId}
         myWorkplace={myWorkplace}
-        revision={revision}
         onChanged={onChanged}
       />
 
@@ -136,14 +133,13 @@ export function WorkplaceManagementBlock({
         workplaceId={workplaceId}
         userId={userId}
         myWorkplace={myWorkplace}
-        revision={revision}
         onChanged={onChanged}
       />
 
-      <AuditLogPanel workplaceId={workplaceId} myWorkplace={myWorkplace} revision={revision} />
+      <AuditLogPanel workplaceId={workplaceId} myWorkplace={myWorkplace} />
 
       {showPortfolioSearch && (
-        <FindWorkplacePanel userId={userId} revision={revision} onChanged={onChanged} />
+        <FindWorkplacePanel userId={userId} onChanged={onChanged} />
       )}
     </RoleBlockShell>
   )

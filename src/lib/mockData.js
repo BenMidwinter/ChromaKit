@@ -3,21 +3,64 @@
  * All records use plain text (no encryption).
  */
 
+/**
+ * Canonical demo persona → store user mapping.
+ * Persona switcher labels/roles live in demoPersonas.js; user ids and memberships live here.
+ */
+export const DEMO_PERSONA_ACCOUNTS = {
+  ben: {
+    userId: 'user-ben',
+    name: 'Ben',
+    serviceLead: false,
+    memberships: [
+      { workplace_id: 'wp-chroma', role: 'clinical_lead' },
+      { workplace_id: 'wp-east', role: 'clinical_lead' },
+    ],
+  },
+  sarah: {
+    userId: 'user-sarah',
+    name: 'Sarah',
+    serviceLead: false,
+    memberships: [
+      { workplace_id: 'wp-chroma', role: 'clinician' },
+      { workplace_id: 'wp-east', role: 'clinician' },
+    ],
+  },
+  daniel: {
+    userId: 'user-daniel',
+    name: 'Daniel',
+    serviceLead: true,
+    memberships: [],
+  },
+  alex: {
+    userId: 'user-alex',
+    name: 'Alex',
+    serviceLead: false,
+    memberships: [
+      { workplace_id: 'wp-chroma', role: 'administrator' },
+    ],
+  },
+}
+
+export const DEMO_CLINICAL_LEAD_USER_ID = DEMO_PERSONA_ACCOUNTS.ben.userId
+export const DEMO_SERVICE_LEAD_USER_ID = DEMO_PERSONA_ACCOUNTS.daniel.userId
+export const DEFAULT_DEMO_PERSONA_ID = 'ben'
+
 export const CURRENT_USER = {
-  id: 'user-daniel',
-  email: 'daniel@chromakit.local',
-  name: 'Daniel',
+  id: DEMO_CLINICAL_LEAD_USER_ID,
+  email: 'ben@chromakit.local',
+  name: DEMO_PERSONA_ACCOUNTS.ben.name,
   isAdmin: false,
   isServiceLead: false,
 }
 
-export const CLINICIAN_WORKPLACES = [
-  { user_id: 'user-daniel', workplace_id: 'wp-chroma', role: 'clinical_lead' },
-  { user_id: 'user-sarah', workplace_id: 'wp-chroma', role: 'clinician' },
-  { user_id: 'user-alex', workplace_id: 'wp-chroma', role: 'administrator' },
-  { user_id: 'user-daniel', workplace_id: 'wp-east', role: 'clinical_lead' },
-  { user_id: 'user-sarah', workplace_id: 'wp-east', role: 'clinician' },
-]
+export const CLINICIAN_WORKPLACES = Object.values(DEMO_PERSONA_ACCOUNTS).flatMap((account) =>
+  account.memberships.map((membership) => ({
+    user_id: account.userId,
+    workplace_id: membership.workplace_id,
+    role: membership.role,
+  })),
+)
 
 export const WORKPLACES = [
   { id: 'wp-chroma', name: 'Chroma Main HQ', join_code: 'CHROMA2026' },
@@ -28,9 +71,16 @@ export const CLINICIAN_PROFILES = [
   {
     id: 'user-daniel',
     full_name: 'Daniel',
-    hcpc_number: 'MT22334',
-    job_title: 'Clinical Lead · Music Therapist',
+    hcpc_number: 'SL10001',
+    job_title: 'Service Lead · Organisation Admin',
     signature_text: 'Daniel',
+  },
+  {
+    id: 'user-ben',
+    full_name: 'Ben',
+    hcpc_number: 'MT12345',
+    job_title: 'Clinical Lead · Music Therapist',
+    signature_text: 'Ben',
   },
   {
     id: 'user-sarah',
@@ -38,13 +88,6 @@ export const CLINICIAN_PROFILES = [
     hcpc_number: 'AT44556',
     job_title: 'Clinician · Art Therapist',
     signature_text: 'Sarah',
-  },
-  {
-    id: 'user-ben',
-    full_name: 'Ben',
-    hcpc_number: 'MT12345',
-    job_title: 'Service Lead · Organisation Admin',
-    signature_text: 'Ben',
   },
   {
     id: 'user-alex',
@@ -149,8 +192,8 @@ export const CLIENTS = [
   },
   {
     id: 'client-5',
-    user_id: 'user-daniel',
-    assigned_therapist: 'Daniel',
+    user_id: 'user-ben',
+    assigned_therapist: 'Ben',
     first_name: 'Morgan',
     surname: 'Reed',
     real_name: 'Morgan Reed',
@@ -225,7 +268,7 @@ export const WORKPLACE_AUDIT_LOGS = [
   {
     id: 'log-1',
     workplace_id: 'wp-chroma',
-    actor_id: 'user-daniel',
+    actor_id: 'user-ben',
     action: 'role_change',
     detail: 'Promoted Sam Rivera to clinician',
     created_at: '2026-06-18T11:00:00Z',
@@ -427,7 +470,7 @@ export const LETTERS = [
     title: 'Letter to GP',
     recipient: 'Dr Patel, Riverside Medical Centre',
     letter_date: '2026-06-18',
-    content: '<p>Dear Dr Patel,</p><p>Re: Alex Johnson (DOB 12/04/2008)</p><p>I am writing following our music therapy assessment at Oak Academy. Alex has engaged well with structured rhythmic activities and would benefit from continued support around transitions.</p><p>Please do not hesitate to contact me if you require further information.</p><p>Yours sincerely,</p><p>Ben Midwinter</p>',
+    content: '<p>Dear Dr Patel,</p><p>Re: Alex Johnson (DOB 12/04/2008)</p><p>I am writing following our music therapy assessment at Oak Academy. Alex has engaged well with structured rhythmic activities and would benefit from continued support around transitions.</p><p>Please do not hesitate to contact me if you require further information.</p><p>Yours sincerely,</p><p>Ben</p>',
     created_at: '2026-06-18T11:00:00Z',
     updated_at: '2026-06-18T11:00:00Z',
   },
@@ -772,8 +815,8 @@ export const APPOINTMENTS = [
     client_id: 'client-5',
     client_name: 'Morgan Reed',
     episode_id: null,
-    clinician_id: 'user-daniel',
-    assigned_therapist: 'Daniel',
+    clinician_id: 'user-ben',
+    assigned_therapist: 'Ben',
     session_date: '2026-06-26',
     start_time: '16:00',
     end_time: '17:00',

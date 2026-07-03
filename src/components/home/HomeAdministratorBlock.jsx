@@ -29,13 +29,14 @@ function AttendanceSummary({ attendance }) {
   )
 }
 
-export default function HomeAdministratorBlock({ data, blurNames }) {
+export default function HomeAdministratorBlock({ data, blurNames, title }) {
   const navigate = useNavigate()
   const { weekLabel, attendance, upcoming, activeCases } = data
 
   return (
     <RoleBlockShell
       blockId="administrator"
+      title={title}
       description={weekLabel ? `Working week ${weekLabel}` : undefined}
       actions={<Link to="/calendar" className="role-block__link">Team calendar</Link>}
     >

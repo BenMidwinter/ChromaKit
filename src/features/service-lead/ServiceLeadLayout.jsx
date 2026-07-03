@@ -1,6 +1,7 @@
 import { Outlet, useOutletContext, useLocation } from 'react-router-dom'
 import { ROLES } from '../../lib/permissions'
 import { getServiceLeadPageMeta } from '../../lib/serviceLeadPages'
+import { getPersonaForRole } from '../../lib/demoPersonas'
 import PageHeader from '../../components/PageHeader'
 import ServiceLeadNav from './ServiceLeadNav'
 
@@ -9,6 +10,7 @@ export default function ServiceLeadLayout() {
   const { demoRole } = parentContext || {}
   const location = useLocation()
   const pageMeta = getServiceLeadPageMeta(location.pathname)
+  const serviceLeadPersona = getPersonaForRole(ROLES.SERVICE_LEAD)
 
   if (demoRole !== ROLES.SERVICE_LEAD) {
     return (
@@ -20,7 +22,7 @@ export default function ServiceLeadLayout() {
         <div className="permission-notice">
           <p><strong>Access restricted.</strong></p>
           <p className="text-subtle text-[0.85rem]">
-            Select <strong>Ben — Service Lead</strong> from the profile switcher in the top right to access these tools.
+            Select <strong>{serviceLeadPersona?.name} — {serviceLeadPersona?.label}</strong> from the profile switcher in the top right to access these tools.
           </p>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { Routes, Route, Navigate, useNavigate, useParams, useOutletContext, Outl
 
 import AppLayout from './components/AppLayout'
 import Home from './components/Home'
-import Calendar from './components/Calendar'
+import Calendar from './features/calendar/CalendarPage'
 import ActiveCases from './components/ActiveCases'
 import AllClients from './components/AllClients'
 import AddClient from './components/AddClient'

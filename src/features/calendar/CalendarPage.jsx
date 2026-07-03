@@ -1,6 +1,6 @@
 import { useOutletContext } from 'react-router-dom'
 import CalendarModule from './CalendarModule'
-import ErrorBoundary from './ErrorBoundary'
+import ErrorBoundary from '../../components/ErrorBoundary'
 
 export default function Calendar() {
   const { activePersona } = useOutletContext()

@@ -5,6 +5,7 @@ const BLOCK_META = { ...ROLE_BLOCK_META, ...ORG_BLOCK_META }
 
 export default function RoleBlockShell({ blockId, title, description, children, actions }) {
   const meta = BLOCK_META[blockId] || {}
+  const heading = title ?? meta.title
 
   return (
     <section className={`role-block role-block--${blockId}`} aria-labelledby={`role-block-${blockId}`}>
@@ -12,7 +13,7 @@ export default function RoleBlockShell({ blockId, title, description, children, 
         <div className="role-block__heading">
           <span className="role-block__badge">{meta.label || blockId}</span>
           <h2 id={`role-block-${blockId}`} className="role-block__title">
-            {title || meta.title}
+            {heading}
           </h2>
           {(description || meta.description) && (
             <p className="role-block__desc">{description || meta.description}</p>

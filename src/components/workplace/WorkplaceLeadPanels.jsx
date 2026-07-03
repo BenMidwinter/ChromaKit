@@ -1,20 +1,23 @@
 import { useMemo, useState } from 'react'
 import {
   searchClinicianProfiles,
-  inviteClinicianToWorkplace,
-  getMembershipRequestsForWorkplace,
-  approveMembershipRequest,
-  declineMembershipRequest,
-  getAuditLogs,
 } from '../../lib/store'
 import { WORKPLACE_MEMBERSHIP_ROLES } from '../../lib/roleBlocks'
 import { normalizeRole } from '../../lib/permissions'
+import {
+  useApproveMembershipRequestMutation,
+  useDeclineMembershipRequestMutation,
+  useInviteClinicianToWorkplaceMutation,
+  useMembershipRequestsQuery,
+  useWorkplaceAuditLogsQuery,
+} from '../../lib/workplaceQueries'
 
-export function InviteCliniciansPanel({ workplaceId, userId, myWorkplace, revision, onChanged }) {
+export function InviteCliniciansPanel({ workplaceId, userId, myWorkplace, onChanged }) {
   const [query, setQuery] = useState('')
   const [inviteRole, setInviteRole] = useState('clinician')
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState(null)
+  const inviteMutation = useInviteClinicianToWorkplaceMutation()
 
   const results = useMemo(
     () => (query.trim().length >= 2
@@ -27,9 +30,15 @@ export function InviteCliniciansPanel({ workplaceId, userId, myWorkplace, revisi
     setError('')
     setBusyId(clinicianId)
     try {
-      inviteClinicianToWorkplace(workplaceId, clinicianId, userId, myWorkplace, inviteRole)
+      await inviteMutation.mutateAsync({
+        workplaceId,
+        userId: clinicianId,
+        actorId: userId,
+        myWorkplace,
+        role: inviteRole,
+      })
       setQuery('')
-      onChanged()
+      onChanged?.()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -90,23 +99,21 @@ export function InviteCliniciansPanel({ workplaceId, userId, myWorkplace, revisi
   )
 }
 
-export function JoinRequestsPanel({ workplaceId, userId, myWorkplace, revision, onChanged }) {
+export function JoinRequestsPanel({ workplaceId, userId, myWorkplace, onChanged }) {
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState(null)
   const [approveRoles, setApproveRoles] = useState({})
-
-  const requests = useMemo(
-    () => getMembershipRequestsForWorkplace(workplaceId, 'pending'),
-    [workplaceId, revision],
-  )
+  const { data: requests = [] } = useMembershipRequestsQuery(workplaceId)
+  const approveMutation = useApproveMembershipRequestMutation()
+  const declineMutation = useDeclineMembershipRequestMutation()
 
   const handleApprove = async (requestId) => {
     setError('')
     setBusyId(requestId)
     try {
       const role = approveRoles[requestId] || 'clinician'
-      approveMembershipRequest(requestId, userId, myWorkplace, role)
-      onChanged()
+      await approveMutation.mutateAsync({ requestId, actorId: userId, myWorkplace, role })
+      onChanged?.()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -118,8 +125,8 @@ export function JoinRequestsPanel({ workplaceId, userId, myWorkplace, revision, 
     setError('')
     setBusyId(requestId)
     try {
-      declineMembershipRequest(requestId, userId, myWorkplace)
-      onChanged()
+      await declineMutation.mutateAsync({ requestId, actorId: userId, myWorkplace })
+      onChanged?.()
     } finally {
       setBusyId(null)
     }
@@ -181,11 +188,8 @@ export function JoinRequestsPanel({ workplaceId, userId, myWorkplace, revision, 
   )
 }
 
-export function AuditLogPanel({ workplaceId, myWorkplace, revision }) {
-  const logs = useMemo(
-    () => getAuditLogs(workplaceId, myWorkplace),
-    [workplaceId, myWorkplace, revision],
-  )
+export function AuditLogPanel({ workplaceId, myWorkplace }) {
+  const { data: logs = [] } = useWorkplaceAuditLogsQuery(workplaceId, myWorkplace)
 
   return (
     <div className="role-block__panel">

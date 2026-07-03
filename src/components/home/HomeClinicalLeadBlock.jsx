@@ -21,12 +21,13 @@ function OutcomeBars({ bars }) {
   )
 }
 
-export default function HomeClinicalLeadBlock({ data, blurNames }) {
+export default function HomeClinicalLeadBlock({ data, blurNames, title }) {
   const { weekLabel, kpis, clientRows, outcomeBars } = data
 
   return (
     <RoleBlockShell
       blockId="clinical_lead"
+      title={title}
       description={weekLabel ? `Working week ${weekLabel}` : undefined}
       actions={(
         <>

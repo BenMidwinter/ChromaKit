@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClientSession } from '../../lib/useClientSession'
-import { getProgressNotesFeed, getProfile, getAppointment } from '../../lib/store'
+import { getProfile, getAppointment } from '../../lib/store'
+import { useProgressNotesFeedQuery } from '../../lib/progressNoteQueries'
 import { formatDisplayDate } from '../../lib/dateArchitecture'
 import RecordListLayout from '../../components/RecordListLayout'
 import RecordTable from '../../components/RecordTable'
@@ -18,7 +19,7 @@ const NOTE_COLUMNS = [
 export default function NotesHistoryPanel() {
   const { clientId } = useClientSession()
   const navigate = useNavigate()
-  const [notes] = useState(() => getProgressNotesFeed(clientId))
+  const { data: notes = [] } = useProgressNotesFeedQuery(clientId)
 
   const rows = useMemo(() => notes.map(note => {
     const author = getProfile(note.author_id)

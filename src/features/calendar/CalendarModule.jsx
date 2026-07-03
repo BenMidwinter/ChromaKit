@@ -1,13 +1,12 @@
 import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useOutletContext } from 'react-router-dom'
-import { getClientsForUser } from '../lib/store'
+import { getClientsForUser } from '../../lib/store'
 import {
   useAllAppointmentsQuery,
   useSaveAppointmentMutation,
-} from '../lib/appointmentQueries'
-import PageHeader from './PageHeader'
-import ErrorBoundary from './ErrorBoundary'
+} from '../../lib/appointmentQueries'
+import ErrorBoundary from '../../components/ErrorBoundary'
 import {
   DEMO_TODAY,
   addDaysYmd,
@@ -18,11 +17,11 @@ import {
   startOfMonthYmd,
   weekDatesYmd,
   workingWeekDatesYmd,
-} from '../lib/dateArchitecture'
+} from '../../lib/dateArchitecture'
 import {
   filterAppointmentsForPersona,
   appointmentsForDate,
-} from '../lib/calendarAccess'
+} from '../../lib/calendarAccess'
 import {
   getCalendarViewPreferences,
   saveCalendarViewPreferences,
@@ -30,21 +29,21 @@ import {
   CALENDAR_END_HOUR_OPTIONS,
   MIN_CALENDAR_INTERVAL,
   MAX_CALENDAR_INTERVAL,
-} from '../lib/calendarPreferences'
+} from '../../lib/calendarPreferences'
 import {
   canPickCalendarOwner,
   filterAppointmentsByCalendarOwner,
   getCalendarOwnerOptions,
   getDefaultCalendarOwner,
-} from '../lib/calendarOwners'
-import { modalityLabel } from '../lib/calendarConstants'
+} from '../../lib/calendarOwners'
+import { modalityLabel } from '../../lib/calendarConstants'
 import {
   calendarEventStyle,
   calendarDotStyle,
-} from '../lib/calendarServiceStyles'
-import { shouldBlurClientIdentity } from '../lib/demoPersonas'
-import BlurredName from './BlurredName'
-import { CalendarWorkspaceFrame, CalendarTimeSlot, EventDrawer, ScheduleSessionPanel, RecurringSchedulePanel } from './LayoutComponents'
+} from '../../lib/calendarServiceStyles'
+import { shouldBlurClientIdentity } from '../../lib/demoPersonas'
+import BlurredName from '../../components/BlurredName'
+import { CalendarWorkspaceFrame, CalendarTimeSlot, EventDrawer, ScheduleSessionPanel, RecurringSchedulePanel } from '../../components/LayoutComponents'
 
 const VIEW_MODES = [
   { id: 'month', label: 'Month' },
@@ -912,65 +911,43 @@ export default function CalendarModule({ persona }) {
 
   const paneOpen = Boolean(selectedAppointment || scheduleDraft)
 
-  const calendarToolbarBtn =
-    'border border-line bg-surface px-2.5 py-1.5 text-sm font-medium text-ink hover:bg-zone-muted'
-
   return (
     <div className="calendar-module">
-      <PageHeader
-        className="page-header--calendar mb-2.5 shrink-0 overflow-visible"
-        title="Calendar"
-        toolbar={(
-          <div className="flex w-full flex-wrap items-center justify-between gap-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <button
-                type="button"
-                className={`${calendarToolbarBtn} border-primary bg-primary text-inverse hover:bg-primary-dark`}
-                onClick={openAddAppointment}
-              >
-                + Add Appointment
-              </button>
-              <button type="button" className={calendarToolbarBtn} onClick={jumpToday}>
-                Today
-              </button>
-              <div className="flex items-center gap-0.5">
-                <button
-                  type="button"
-                  className={calendarToolbarBtn}
-                  onClick={() => navigateDate(viewMode === 'month' ? -30 : viewMode === 'day' ? -1 : -7)}
-                  aria-label="Previous period"
-                >
-                  ←
-                </button>
-                <button
-                  type="button"
-                  className={calendarToolbarBtn}
-                  onClick={() => navigateDate(viewMode === 'month' ? 30 : viewMode === 'day' ? 1 : 7)}
-                  aria-label="Next period"
-                >
-                  →
-                </button>
-              </div>
-              <p className="m-0 min-w-0 text-sm font-semibold text-ink">{periodLabel}</p>
+      <header className="page-header page-header--with-toolbar page-header--calendar">
+        <div className="page-header__text">
+          <h1 className="page-header__title">Calendar</h1>
+        </div>
+        <div className="page-header__toolbar calendar-toolbar">
+          <div className="calendar-toolbar__primary">
+            <button type="button" className="calendar-toolbar__btn calendar-toolbar__btn--add" onClick={openAddAppointment}>
+              + Add Appointment
+            </button>
+            <button type="button" className="calendar-toolbar__btn calendar-toolbar__btn--today" onClick={jumpToday}>
+              Today
+            </button>
+            <div className="calendar-toolbar__nav">
+              <button type="button" className="calendar-toolbar__btn" onClick={() => navigateDate(viewMode === 'month' ? -30 : viewMode === 'day' ? -1 : -7)} aria-label="Previous period">←</button>
+              <button type="button" className="calendar-toolbar__btn" onClick={() => navigateDate(viewMode === 'month' ? 30 : viewMode === 'day' ? 1 : 7)} aria-label="Next period">→</button>
             </div>
-            <div className="ml-auto shrink-0">
-              <CalendarViewOptions
-                prefs={viewPrefs}
-                open={viewOptionsOpen}
-                onToggle={() => setViewOptionsOpen(o => !o)}
-                onClose={() => setViewOptionsOpen(false)}
-                onChange={handleViewPrefsChange}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                calendarOwner={calendarOwner}
-                ownerOptions={ownerOptions}
-                showOwnerPicker={showOwnerPicker}
-                onOwnerChange={setCalendarOwner}
-              />
-            </div>
+            <p className="calendar-toolbar__period">{periodLabel}</p>
           </div>
-        )}
-      />
+          <div className="calendar-toolbar__options">
+            <CalendarViewOptions
+              prefs={viewPrefs}
+              open={viewOptionsOpen}
+              onToggle={() => setViewOptionsOpen(o => !o)}
+              onClose={() => setViewOptionsOpen(false)}
+              onChange={handleViewPrefsChange}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              calendarOwner={calendarOwner}
+              ownerOptions={ownerOptions}
+              showOwnerPicker={showOwnerPicker}
+              onOwnerChange={setCalendarOwner}
+            />
+          </div>
+        </div>
+      </header>
 
       <CalendarWorkspaceFrame
         paneOpen={paneOpen}

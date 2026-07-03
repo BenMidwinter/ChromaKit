@@ -1,7 +1,6 @@
-import { useMemo } from 'react'
 import { Link, useNavigate, useParams, useOutletContext } from 'react-router-dom'
-import { getTeamMemberProfile } from '../lib/store'
 import { normalizeRole } from '../lib/permissions'
+import { useTeamMemberProfileQuery } from '../lib/workplaceQueries'
 import PageHeader from './PageHeader'
 
 function formatRole(role) {
@@ -13,9 +12,10 @@ export default function WorkplaceTeamMember() {
   const navigate = useNavigate()
   const { myWorkplace, session } = useOutletContext()
 
-  const member = useMemo(
-    () => (myWorkplace ? getTeamMemberProfile(userId, myWorkplace.id, myWorkplace) : null),
-    [userId, myWorkplace],
+  const { data: member, isPending } = useTeamMemberProfileQuery(
+    userId,
+    myWorkplace?.id,
+    myWorkplace,
   )
 
   if (!myWorkplace) {
@@ -23,6 +23,15 @@ export default function WorkplaceTeamMember() {
       <div className="page">
         <PageHeader title="Team member" subtitle="Select a workplace to view team profiles." />
         <div className="card"><p className="text-muted">No workplace linked.</p></div>
+      </div>
+    )
+  }
+
+  if (isPending) {
+    return (
+      <div className="page">
+        <PageHeader title="Team member" subtitle={myWorkplace.name} />
+        <div className="card"><p className="text-muted">Loading profile…</p></div>
       </div>
     )
   }

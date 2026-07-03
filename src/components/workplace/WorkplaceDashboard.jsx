@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { getWorkplaceMembers, updateWorkplaceMemberRole } from '../../lib/store'
 import { usePermissions } from '../../lib/usePermissions'
 import { getVisibleWorkplaceBlocks } from '../../lib/roleBlocks'
 import { ROLES } from '../../lib/permissions'
@@ -10,6 +9,10 @@ import WorkplaceClinicianBlock, {
   WorkplaceManagementBlock,
 } from './WorkplaceBlocks'
 import { FindWorkplacePanel } from './WorkplacePanels'
+import {
+  useUpdateWorkplaceMemberRoleMutation,
+  useWorkplaceMembersQuery,
+} from '../../lib/workplaceQueries'
 
 export default function WorkplaceDashboard() {
   const {
@@ -21,13 +24,14 @@ export default function WorkplaceDashboard() {
     refreshMemberships,
   } = useOutletContext()
   const perms = usePermissions()
-  const [tick, setTick] = useState(0)
+  const roleMutation = useUpdateWorkplaceMemberRoleMutation()
   const [roleBusyId, setRoleBusyId] = useState(null)
   const [roleError, setRoleError] = useState('')
 
+  const { data: members = [] } = useWorkplaceMembersQuery(myWorkplace?.id, myWorkplace)
+
   const bump = () => {
     refreshMemberships?.()
-    setTick(t => t + 1)
   }
 
   const blocks = useMemo(() => getVisibleWorkplaceBlocks(perms.role), [perms.role])
@@ -41,20 +45,23 @@ export default function WorkplaceDashboard() {
           subtitle="Search for a workplace and request to join — a clinical lead will review your request."
         />
         <div className="role-block-stack">
-          <FindWorkplacePanel userId={session.user.id} revision={tick} onChanged={bump} />
+          <FindWorkplacePanel userId={session.user.id} onChanged={bump} />
         </div>
       </div>
     )
   }
 
-  const members = getWorkplaceMembers(myWorkplace.id, myWorkplace)
-  void tick
-
   const handleRoleChange = async (memberUserId, newRole) => {
     setRoleError('')
     setRoleBusyId(memberUserId)
     try {
-      updateWorkplaceMemberRole(myWorkplace.id, memberUserId, newRole, session.user.id, myWorkplace)
+      await roleMutation.mutateAsync({
+        workplaceId: myWorkplace.id,
+        memberUserId,
+        newRole,
+        actorId: session.user.id,
+        myWorkplace,
+      })
       bump()
     } catch (err) {
       setRoleError(err.message)
@@ -86,7 +93,6 @@ export default function WorkplaceDashboard() {
             session={session}
             myWorkplace={myWorkplace}
             members={members}
-            revision={tick}
             onChanged={bump}
           />
         )}
@@ -96,7 +102,6 @@ export default function WorkplaceDashboard() {
             workplaceId={myWorkplace.id}
             userId={session.user.id}
             members={members}
-            revision={tick}
             onChanged={bump}
             onRoleChange={handleRoleChange}
             roleBusyId={roleBusyId}

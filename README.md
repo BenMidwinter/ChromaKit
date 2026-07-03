@@ -73,9 +73,9 @@ Use the profile switcher in the app header to explore role-specific behaviour:
 
 | Persona | Role | Good for testing |
 | --- | --- | --- |
-| **Daniel** | Clinical Lead | Client add/edit, appointments, home dashboard |
+| **Ben** | Clinical Lead | Client add/edit, appointments, home dashboard |
 | **Sarah** | Clinician | Day-to-day clinical workflows |
-| **Ben** | Service Lead | `/service-lead/*` admin screens, blurred client identity |
+| **Daniel** | Service Lead | `/service-lead/*` admin screens, blurred client identity |
 | **Alex** | Administrator | Operations and workplace views |
 
 ## Project structure

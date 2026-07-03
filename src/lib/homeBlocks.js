@@ -3,7 +3,15 @@ import { db } from './data/collections'
 import { sortLatestFirst, compareYmd, DEMO_TODAY } from './dateArchitecture'
 import { appointmentSchedule } from './appointmentUtils'
 import { buildLeadDashboard } from './leadDashboard'
-import { ROLES } from './permissions'
+import { ROLES, normalizeRole } from './permissions'
+
+/** Workplaces where the user has team-operations / oversight home blocks. */
+export function filterHomeOversightWorkplaces(workplaces = []) {
+  return workplaces.filter((wp) => {
+    const role = normalizeRole(wp.role)
+    return role === ROLES.CLINICAL_LEAD || role === ROLES.ADMINISTRATOR
+  })
+}
 
 function sortUpcomingSoonestFirst(items) {
   return [...items].sort((a, b) => {
@@ -92,37 +100,36 @@ function buildLeadScope({ myWorkplace, clients, demoRole, userId }) {
   })
 }
 
-export function buildClinicianBlockData({ session, myWorkplace, persona }) {
-  const workplaceId = myWorkplace?.id ?? null
+export function buildClinicianBlockData({ session, persona }) {
   const clientsById = new Map(db.clients.map(c => [c.id, c]))
   const upcoming = getPersonalUpcomingAppointments(
     session.user.id,
     persona.name,
-    workplaceId,
+    null,
   ).map(appt => ({
     ...appt,
     client_name: clientsById.get(appt.client_id)?.real_name,
   }))
-  const activeCases = getPersonalActiveCases(session.user.id, workplaceId)
+  const activeCases = getPersonalActiveCases(session.user.id, null)
   const todayCount = upcoming.filter(a => a.session_date === DEMO_TODAY).length
 
   return { upcoming, activeCases, todayCount }
 }
 
-export function buildAdministratorBlockData({ session, myWorkplace }) {
-  if (!myWorkplace) {
-    return { weekLabel: '', attendance: null, upcoming: [], activeCases: [] }
+export function buildAdministratorBlockData({ session, workplace }) {
+  if (!workplace?.id) {
+    return { weekLabel: '', attendance: null, upcoming: [], activeCases: [], workplaceName: '' }
   }
 
   const dashboard = buildLeadScope({
-    myWorkplace,
-    clients: db.clients.filter(c => c.workplace_id === myWorkplace.id),
+    myWorkplace: workplace,
+    clients: db.clients.filter(c => c.workplace_id === workplace.id),
     demoRole: ROLES.ADMINISTRATOR,
     userId: session.user.id,
   })
 
   const clientsById = new Map(db.clients.map(c => [c.id, c]))
-  const upcoming = getWorkplaceUpcomingAppointments(myWorkplace.id).map(appt => {
+  const upcoming = getWorkplaceUpcomingAppointments(workplace.id).map(appt => {
     const client = clientsById.get(appt.client_id)
     return {
       ...appt,
@@ -131,13 +138,14 @@ export function buildAdministratorBlockData({ session, myWorkplace }) {
     }
   })
 
-  const activeCases = getWorkplaceActiveCases(myWorkplace.id).map(client => ({
+  const activeCases = getWorkplaceActiveCases(workplace.id).map(client => ({
     ...client,
     lead_clinician: client.assigned_therapist,
   }))
 
   return {
     weekLabel: dashboard.weekLabel,
+    workplaceName: workplace.name,
     attendance: {
       total: dashboard.kpis.weekAppointments,
       attended: dashboard.kpis.attended,
@@ -149,12 +157,13 @@ export function buildAdministratorBlockData({ session, myWorkplace }) {
   }
 }
 
-export function buildClinicalLeadBlockData({ session, myWorkplace, clients, demoRole }) {
-  if (!myWorkplace) {
-    return { weekLabel: '', kpis: null, clientRows: [], outcomeBars: [] }
+export function buildClinicalLeadBlockData({ session, workplace, demoRole }) {
+  if (!workplace?.id) {
+    return { weekLabel: '', kpis: null, clientRows: [], outcomeBars: [], workplaceName: '' }
   }
 
-  const dashboard = buildLeadScope({ myWorkplace, clients, demoRole, userId: session.user.id })
+  const clients = db.clients.filter(c => c.workplace_id === workplace.id)
+  const dashboard = buildLeadScope({ myWorkplace: workplace, clients, demoRole, userId: session.user.id })
   const { kpis } = dashboard
 
   const attendanceRate = kpis.weekAppointments > 0
@@ -173,6 +182,7 @@ export function buildClinicalLeadBlockData({ session, myWorkplace, clients, demo
 
   return {
     weekLabel: dashboard.weekLabel,
+    workplaceName: workplace.name,
     kpis,
     clientRows: dashboard.clientRows,
     outcomeBars,
