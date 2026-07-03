@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { getIntakeForm, formatInsertText } from '../lib/intakeForm'
-import { getClinicalProfileInsightSections } from '../lib/clinicalProfile'
+import { getIntakeForm, formatInsertText } from '../../lib/intakeForm'
+import { getClinicalProfileInsightSections } from '../../lib/clinicalProfile'
 
 function InsightSection({ title, subtitle, items, category, onInsert, emptyText }) {
   if (!items?.length) {

@@ -1,4 +1,4 @@
-import { getClientClinicalAlerts } from '../lib/intakeForm'
+import { getClientClinicalAlerts } from '../../lib/intakeForm'
 
 export default function ClientClinicalAlerts({ clientId }) {
   const alerts = getClientClinicalAlerts(clientId)

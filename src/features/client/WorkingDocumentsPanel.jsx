@@ -1,17 +1,17 @@
 import { useState, useEffect, useMemo } from 'react'
-import RichTextEditor from './RichTextEditor'
-import TemplatePicker, { hasMeaningfulEditorContent } from './TemplatePicker'
-import { useClientSession } from '../lib/useClientSession'
-import { buildMergeContext } from '../lib/mergeFields'
+import RichTextEditor from '../../components/RichTextEditor'
+import TemplatePicker, { hasMeaningfulEditorContent } from '../../components/TemplatePicker'
+import { useClientSession } from '../../lib/useClientSession'
+import { buildMergeContext } from '../../lib/mergeFields'
 import {
   getWorkingDocuments,
   saveWorkingDocument,
   getAvailableLetterTemplates,
   getProfile,
-} from '../lib/store'
-import RecordListLayout from './RecordListLayout'
-import RecordTable from './RecordTable'
-import { useToast, useConfirm } from './ui'
+} from '../../lib/store'
+import RecordListLayout from '../../components/RecordListLayout'
+import RecordTable from '../../components/RecordTable'
+import { useToast, useConfirm } from '../../components/ui'
 
 function formatDocDate(iso) {
   if (!iso) return '—'

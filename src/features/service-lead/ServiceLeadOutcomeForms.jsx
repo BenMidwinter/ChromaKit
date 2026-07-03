@@ -1,4 +1,4 @@
-import ClientSectionPlaceholder from '../../components/ClientSectionPlaceholder'
+import ClientSectionPlaceholder from '../client/ClientSectionPlaceholder'
 import OrgConfigBlock from './blocks/OrgConfigBlock'
 
 export default function ServiceLeadOutcomeForms() {

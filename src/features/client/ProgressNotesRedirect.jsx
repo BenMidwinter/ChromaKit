@@ -1,5 +1,5 @@
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
-import { getProgressNote } from '../lib/store'
+import { getProgressNote } from '../../lib/store'
 
 /** Legacy paths → appointment-scoped note URL. */
 export default function ProgressNotesRedirect() {

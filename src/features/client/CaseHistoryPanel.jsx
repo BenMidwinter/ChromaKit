@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useParams, useOutletContext } from 'react-router-dom'
-import { getEpisodes } from '../lib/store'
-import { usePermissions } from '../lib/usePermissions'
-import RecordListLayout from './RecordListLayout'
-import RecordTable from './RecordTable'
-import { useToast } from './ui'
+import { getEpisodes } from '../../lib/store'
+import { usePermissions } from '../../lib/usePermissions'
+import RecordListLayout from '../../components/RecordListLayout'
+import RecordTable from '../../components/RecordTable'
+import { useToast } from '../../components/ui'
 
 function formatDate(iso) {
   if (!iso) return '—'

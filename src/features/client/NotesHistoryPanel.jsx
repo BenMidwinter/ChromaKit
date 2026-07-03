@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useClientSession } from '../lib/useClientSession'
-import { getProgressNotesFeed, getProfile, getAppointment } from '../lib/store'
-import { formatDisplayDate } from '../lib/dateArchitecture'
-import RecordListLayout from './RecordListLayout'
-import RecordTable from './RecordTable'
-import { formatSessionDateTime } from '../lib/appointmentUtils'
+import { useClientSession } from '../../lib/useClientSession'
+import { getProgressNotesFeed, getProfile, getAppointment } from '../../lib/store'
+import { formatDisplayDate } from '../../lib/dateArchitecture'
+import RecordListLayout from '../../components/RecordListLayout'
+import RecordTable from '../../components/RecordTable'
+import { formatSessionDateTime } from '../../lib/appointmentUtils'
 
 const NOTE_COLUMNS = [
   { key: 'title', label: 'Note title', filter: { type: 'text', placeholder: 'Filter title…' } },

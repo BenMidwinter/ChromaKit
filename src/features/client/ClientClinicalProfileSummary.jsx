@@ -1,7 +1,7 @@
 import {
   CLINICAL_PROFILE_FIELDS,
   tagsFromProfileValue,
-} from '../lib/clinicalProfile'
+} from '../../lib/clinicalProfile'
 
 function TagGroup({ label, tags }) {
   if (!tags.length) return null

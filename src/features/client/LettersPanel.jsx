@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import RichTextEditor from './RichTextEditor'
-import { useClientSession } from '../lib/useClientSession'
-import { getLetters, saveLetter, getProfile } from '../lib/store'
-import RecordListLayout from './RecordListLayout'
-import RecordTable from './RecordTable'
-import { useToast } from './ui'
+import RichTextEditor from '../../components/RichTextEditor'
+import { useClientSession } from '../../lib/useClientSession'
+import { getLetters, saveLetter, getProfile } from '../../lib/store'
+import RecordListLayout from '../../components/RecordListLayout'
+import RecordTable from '../../components/RecordTable'
+import { useToast } from '../../components/ui'
 
 function formatDocDate(iso) {
   if (!iso) return '—'

@@ -1,6 +1,6 @@
-import RecordListLayout from './RecordListLayout'
-import RecordTable from './RecordTable'
-import { useToast } from './ui'
+import RecordListLayout from '../../components/RecordListLayout'
+import RecordTable from '../../components/RecordTable'
+import { useToast } from '../../components/ui'
 
 /**
  * Consistent list shell for record types not yet fully implemented.

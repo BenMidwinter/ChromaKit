@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { getProfile } from '../lib/store'
-import { usePermissions } from '../lib/usePermissions'
+import { getProfile } from '../../lib/store'
+import { usePermissions } from '../../lib/usePermissions'
 import ClientProfileOverlay from './ClientProfileOverlay'
 
 export default function ClientDetailsBar({ client, onClientUpdated, embedded = false }) {

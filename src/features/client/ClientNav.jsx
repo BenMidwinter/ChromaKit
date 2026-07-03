@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useOutletContext } from 'react-router-dom'
-import { canAccessClientNavSection } from '../lib/permissions'
+import { canAccessClientNavSection } from '../../lib/permissions'
 
 const NAV_SECTIONS = [
   {

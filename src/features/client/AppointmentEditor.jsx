@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom'
-import { useClientSession } from '../lib/useClientSession'
-import { usePermissions } from '../lib/usePermissions'
+import { useClientSession } from '../../lib/useClientSession'
+import { usePermissions } from '../../lib/usePermissions'
 import {
   getAppointment,
   getEpisodes,
@@ -10,15 +10,15 @@ import {
   getWorkplaceClinicians,
   getProfile,
   APPOINTMENT_TYPES,
-} from '../lib/store'
+} from '../../lib/store'
 import {
   appointmentSchedule,
   appointmentDurationMinutes,
   formatSessionDateTime,
   attendanceLabel,
-} from '../lib/appointmentUtils'
-import { addMinutesToTime } from '../lib/dateArchitecture'
-import { useToast } from './ui'
+} from '../../lib/appointmentUtils'
+import { addMinutesToTime } from '../../lib/dateArchitecture'
+import { useToast } from '../../components/ui'
 
 const ATTENDANCE_OPTIONS = ['attended', 'did_not_attend', 'cancelled']
 

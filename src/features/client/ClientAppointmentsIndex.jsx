@@ -4,15 +4,15 @@ import {
   getAppointmentsForClient,
   getProfile,
   getProgressNoteByAppointment,
-} from '../lib/store'
-import { modalityLabel } from '../lib/calendarConstants'
+} from '../../lib/store'
+import { modalityLabel } from '../../lib/calendarConstants'
 import {
   formatSessionDateTime,
   attendanceLabel,
   attendanceBadgeClass,
-} from '../lib/appointmentUtils'
-import RecordListLayout from './RecordListLayout'
-import RecordTable from './RecordTable'
+} from '../../lib/appointmentUtils'
+import RecordListLayout from '../../components/RecordListLayout'
+import RecordTable from '../../components/RecordTable'
 
 const APPT_COLUMNS = [
   { key: 'service', label: 'Service', filter: { type: 'text', placeholder: 'Filter service…' } },

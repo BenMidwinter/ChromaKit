@@ -4,9 +4,9 @@ import BodyMap from './BodyMap'
 import ClientDetailsBar from './ClientDetailsBar'
 import ClientNav from './ClientNav'
 import ClientClinicalAlerts from './ClientClinicalAlerts'
-import BlurredName from './BlurredName'
-import { usePermissions } from '../lib/usePermissions'
-import { shouldBlurClientIdentity } from '../lib/demoPersonas'
+import BlurredName from '../../components/BlurredName'
+import { usePermissions } from '../../lib/usePermissions'
+import { shouldBlurClientIdentity } from '../../lib/demoPersonas'
 
 export default function PatientProfile({ client: initialClient }) {
   const navigate = useNavigate()

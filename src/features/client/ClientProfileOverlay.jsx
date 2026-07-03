@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import DiagnosisPicker from './DiagnosisPicker'
-import CommaTagInput from './CommaTagInput'
-import { updateClientClinicalDetails, updateClientClinicalProfile } from '../lib/store'
-import { useToast } from './ui'
+import DiagnosisPicker from '../../components/DiagnosisPicker'
+import CommaTagInput from '../../components/CommaTagInput'
+import { updateClientClinicalDetails, updateClientClinicalProfile } from '../../lib/store'
+import { useToast } from '../../components/ui'
 
 const TAG_PROFILE_FIELDS = [
   {

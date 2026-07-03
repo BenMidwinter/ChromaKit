@@ -46,7 +46,7 @@ Status key: `[x]` done · `[~]` partial · `[ ]` not started
 ### Pillar 1 — Encapsulation
 
 - [~] Feature folders — **Service Lead** (`src/features/service-lead/`, 11 files); home/workplace block components co-located under `components/home|workplace/`
-- [ ] Feature folder: `features/client/` (PatientProfile, panels, appointments, notes)
+- [x] Feature folder: `features/client/` (PatientProfile, panels, appointments, notes)
 - [ ] Feature folder: `features/calendar/`
 - [ ] Feature folder: `features/workplace/` (promote from `components/workplace/`)
 - [ ] Feature folder: `features/home/` (promote from `components/home/`)

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useEffect } from 'react'
-import { getProfile } from '../lib/store'
+import { getProfile } from '../../lib/store'
 
 const TYPE_LABELS = {
   created: 'Record',

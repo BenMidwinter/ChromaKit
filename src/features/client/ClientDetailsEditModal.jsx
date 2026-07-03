@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import DiagnosisPicker from './DiagnosisPicker'
-import { updateClientClinicalDetails } from '../lib/store'
-import { useToast } from './ui'
+import DiagnosisPicker from '../../components/DiagnosisPicker'
+import { updateClientClinicalDetails } from '../../lib/store'
+import { useToast } from '../../components/ui'
 
 export default function ClientDetailsEditModal({ client, onClose, onSaved }) {
   const [school, setSchool] = useState(client.school || '')

@@ -5,15 +5,15 @@ import {
   StickyContextBar,
   SplitWorkspace,
   ClinicalPaper,
-} from './LayoutComponents'
-import RichTextEditor from './RichTextEditor'
-import TemplatePicker, { hasMeaningfulEditorContent } from './TemplatePicker'
+} from '../../components/LayoutComponents'
+import RichTextEditor from '../../components/RichTextEditor'
+import TemplatePicker, { hasMeaningfulEditorContent } from '../../components/TemplatePicker'
 import ClinicalInsightsSidebar from './ClinicalInsightsSidebar'
 import ArtworkAttachmentZone from './ArtworkAttachmentZone'
-import { usePermissions } from '../lib/usePermissions'
-import { buildMergeContext } from '../lib/mergeFields'
-import { MODALITY_OPTIONS } from '../lib/intakeForm'
-import { formatDisplayDate, DEMO_TODAY } from '../lib/dateArchitecture'
+import { usePermissions } from '../../lib/usePermissions'
+import { buildMergeContext } from '../../lib/mergeFields'
+import { MODALITY_OPTIONS } from '../../lib/intakeForm'
+import { formatDisplayDate, DEMO_TODAY } from '../../lib/dateArchitecture'
 import {
   getProgressNotes,
   getProgressNote,
@@ -23,13 +23,13 @@ import {
   getProfile,
   getAvailableProgressNoteTemplates,
   APPOINTMENT_TYPES,
-} from '../lib/store'
+} from '../../lib/store'
 import {
   formatAppointmentDateTime,
   formatAppointmentDate,
   sessionDateFromAppointment,
-} from '../lib/appointmentUtils'
-import { useToast, useConfirm } from './ui'
+} from '../../lib/appointmentUtils'
+import { useToast, useConfirm } from '../../components/ui'
 
 const RAIL_TABS = {
   INSIGHTS: 'insights',

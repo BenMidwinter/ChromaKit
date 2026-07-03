@@ -6,12 +6,12 @@ import {
 import '@xyflow/react/dist/style.css'
 import { toPng } from 'html-to-image'
 
-import ClinicalNode from './ClinicalNode'
-import ImpactEdge from './ImpactEdge'
-import ConcentricBackground from './ConcentricBackground'
-import { generateNodePosition } from '../lib/bodyMapUtils'
-import { getBodyMap, saveBodyMap } from '../lib/store'
-import { useToast } from './ui'
+import ClinicalNode from '../../components/ClinicalNode'
+import ImpactEdge from '../../components/ImpactEdge'
+import ConcentricBackground from '../../components/ConcentricBackground'
+import { generateNodePosition } from '../../lib/bodyMapUtils'
+import { getBodyMap, saveBodyMap } from '../../lib/store'
+import { useToast } from '../../components/ui'
 
 const nodeTypes = { clinical: ClinicalNode }
 const edgeTypes = { impact: ImpactEdge }
