@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z, type ZodType } from 'zod'
 import { APPOINTMENT_TYPES, ATTENDANCE_STATUSES } from './mockData'
 
 /**
@@ -11,7 +11,10 @@ import { APPOINTMENT_TYPES, ATTENDANCE_STATUSES } from './mockData'
 const YMD = /^\d{4}-\d{2}-\d{2}$/
 const HHMM = /^\d{2}:\d{2}$/
 
-const requiredText = (label) =>
+const appointmentTypeKeys = Object.keys(APPOINTMENT_TYPES) as [string, ...string[]]
+const attendanceStatusKeys = Object.keys(ATTENDANCE_STATUSES) as [string, ...string[]]
+
+const requiredText = (label: string) =>
   z.string({ error: `${label} is required.` })
     .trim()
     .min(1, `${label} is required.`)
@@ -41,7 +44,7 @@ export const progressNoteInputSchema = z
     session_date: dateString.optional(),
     modality_used: z.string().nullish(),
     therapeutic_theme: optionalText,
-    artwork_attachments: z.array(z.any()).optional(),
+    artwork_attachments: z.array(z.unknown()).optional(),
   })
   .refine((p) => Boolean(p.id || p.client_id), {
     message: 'A client is required to create a progress note.',
@@ -85,9 +88,9 @@ export const appointmentInputSchema = z
     end_time: timeString.optional(),
     scheduled_at: z.string().optional(),
     duration_minutes: z.coerce.number().positive().optional(),
-    appointment_type: z.enum(Object.keys(APPOINTMENT_TYPES)).optional(),
+    appointment_type: z.enum(appointmentTypeKeys).optional(),
     therapy_modality: z.string().optional(),
-    attendance_status: z.enum(Object.keys(ATTENDANCE_STATUSES)).nullish(),
+    attendance_status: z.enum(attendanceStatusKeys).nullish(),
     location: optionalText,
     notes: z.string().optional(),
   })
@@ -100,12 +103,41 @@ export const appointmentInputSchema = z
     path: ['session_date'],
   })
 
+export const workplaceInputSchema = z.object({
+  name: requiredText('Workplace name'),
+  join_code: optionalText,
+})
+
+export const clinicianUserInputSchema = z.object({
+  full_name: requiredText('Full name'),
+  hcpc_number: optionalText,
+  job_title: optionalText,
+  bio: z.string().optional(),
+})
+
+export const orgServiceInputSchema = z.object({
+  service_type: z.enum(['appointment', 'admin', 'busy']).optional(),
+  name: requiredText('Service name'),
+  description: z.string().optional(),
+  color: z.string().optional(),
+  slug: z.string().optional(),
+})
+
+export const orgTemplateInputSchema = z.object({
+  id: z.string().optional(),
+  name: requiredText('Template name'),
+  description: z.string().optional(),
+  workplace_id: z.string().nullish(),
+  content: z.string().optional(),
+  is_active: z.boolean().optional(),
+})
+
 /**
  * Parse `data` against `schema`, throwing a single human-readable Error on
  * failure. Existing call sites already surface `err.message`, so validation
  * failures flow straight to the user without new plumbing.
  */
-export function parseOrThrow(schema, data, label = 'Input') {
+export function parseOrThrow<T>(schema: ZodType<T>, data: unknown, label = 'Input'): T {
   const result = schema.safeParse(data)
   if (result.success) return result.data
   const issue = result.error.issues[0]

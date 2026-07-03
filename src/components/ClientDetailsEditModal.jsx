@@ -8,6 +8,7 @@ export default function ClientDetailsEditModal({ client, onClose, onSaved }) {
   const [medication, setMedication] = useState(client.medication || '')
   const [selectedDiagnoses, setSelectedDiagnoses] = useState([])
   const [saving, setSaving] = useState(false)
+  const [errors, setErrors] = useState({})
   const toast = useToast()
 
   useEffect(() => {
@@ -23,6 +24,7 @@ export default function ClientDetailsEditModal({ client, onClose, onSaved }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     setSaving(true)
+    setErrors({})
     try {
       const updated = updateClientClinicalDetails(client.id, {
         school: school.trim(),
@@ -33,7 +35,7 @@ export default function ClientDetailsEditModal({ client, onClose, onSaved }) {
       toast.success('Client details saved.')
       onClose()
     } catch (err) {
-      toast.error(err.message)
+      setErrors({ form: err.message })
     } finally {
       setSaving(false)
     }
@@ -48,6 +50,9 @@ export default function ClientDetailsEditModal({ client, onClose, onSaved }) {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {errors.form && (
+            <p className="form-error" role="alert" style={{ marginBottom: '1rem' }}>{errors.form}</p>
+          )}
           <div className="form-group">
             <label>School / setting</label>
             <input className="paper-input" value={school} onChange={e => setSchool(e.target.value)} />

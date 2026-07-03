@@ -7,7 +7,8 @@ export default function IdentityVisibilityBanner({
   context = 'calendar',
   calendarOwnerLabel = null,
 }) {
-  if (!persona || totalCount === 0) return null
+  if (!persona) return null
+  if (totalCount === 0 && context !== 'service-lead') return null
 
   const { tone, message } = getPersonaVisibilitySummary(persona, visibleCount, totalCount)
   const isRestricted = tone === 'restricted'
@@ -24,6 +25,7 @@ export default function IdentityVisibilityBanner({
         <span className="identity-banner__name">{persona.name}</span>
         <span className="identity-banner__role">({persona.label})</span>
         {context === 'calendar' && <span className="identity-banner__context">· Calendar</span>}
+        {context === 'service-lead' && <span className="identity-banner__context">· Organisation overview</span>}
         {calendarOwnerLabel && (
           <span className="identity-banner__context">· {calendarOwnerLabel}</span>
         )}

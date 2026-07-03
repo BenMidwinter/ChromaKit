@@ -1,5 +1,4 @@
 import { useOutletContext } from 'react-router-dom'
-import PageHeader from './PageHeader'
 import CalendarModule from './CalendarModule'
 import ErrorBoundary from './ErrorBoundary'
 
@@ -7,8 +6,7 @@ export default function Calendar() {
   const { activePersona } = useOutletContext()
 
   return (
-    <div className="page">
-      <PageHeader title="Calendar" subtitle="Session scheduling filtered by your demo profile." />
+    <div className="page page--calendar">
       <ErrorBoundary
         label="calendar-module"
         resetKeys={[activePersona?.id]}

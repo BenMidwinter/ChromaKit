@@ -42,6 +42,7 @@ export default function ClientProfileOverlay({ client, onClose, onSaved }) {
   const [selectedDiagnoses, setSelectedDiagnoses] = useState([])
   const [profile, setProfile] = useState(client.clinical_profile || {})
   const [saving, setSaving] = useState(false)
+  const [errors, setErrors] = useState({})
   const toast = useToast()
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function ClientProfileOverlay({ client, onClose, onSaved }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     setSaving(true)
+    setErrors({})
     try {
       updateClientClinicalDetails(client.id, {
         school: school.trim(),
@@ -73,7 +75,7 @@ export default function ClientProfileOverlay({ client, onClose, onSaved }) {
       toast.success('Clinical profile saved.')
       onClose()
     } catch (err) {
-      toast.error(err.message)
+      setErrors({ form: err.message })
     } finally {
       setSaving(false)
     }
@@ -101,6 +103,9 @@ export default function ClientProfileOverlay({ client, onClose, onSaved }) {
         </header>
 
         <form onSubmit={handleSubmit} className="client-profile-overlay__form">
+          {errors.form && (
+            <p className="form-error" role="alert" style={{ margin: '0 0 1rem' }}>{errors.form}</p>
+          )}
           <section className="client-profile-overlay__section">
             <h3 className="client-profile-overlay__section-title">Core details</h3>
             <div className="client-profile-overlay__grid client-profile-overlay__grid--core">

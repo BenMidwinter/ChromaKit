@@ -1,5 +1,5 @@
 import { APPOINTMENT_TYPES } from './mockData'
-import { clinicalProfileMergeValues } from './clinicalProfile'
+import { clinicalProfileMergeValues, type ClientClinicalRecord } from './clinicalProfile'
 
 export const MERGE_FIELD_OPTIONS = [
   { key: 'client_name', label: 'Client name' },
@@ -20,7 +20,7 @@ export const MERGE_FIELD_OPTIONS = [
   { key: 'clinician_hcpc', label: 'HCPC number' },
 ]
 
-function formatDisplayDate(isoDate) {
+function formatDisplayDate(isoDate: string | null | undefined): string {
   if (!isoDate) return ''
   return new Date(isoDate).toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -29,13 +29,23 @@ function formatDisplayDate(isoDate) {
   })
 }
 
-export function buildMergeContext({ client, appointment, profile, sessionDate }) {
+export function buildMergeContext({
+  client,
+  appointment,
+  profile,
+  sessionDate,
+}: {
+  client?: ClientClinicalRecord & { real_name?: string; dob?: string }
+  appointment?: { appointment_type?: string; location?: string } | null
+  profile?: { full_name?: string; job_title?: string; hcpc_number?: string } | null
+  sessionDate?: string
+}) {
   return {
     client_name: client?.real_name || '',
     client_dob: client?.dob || '',
     session_date: formatDisplayDate(sessionDate),
     service_type: appointment
-      ? (APPOINTMENT_TYPES[appointment.appointment_type] || appointment.appointment_type)
+      ? (APPOINTMENT_TYPES[appointment.appointment_type as keyof typeof APPOINTMENT_TYPES] || appointment.appointment_type)
       : '',
     appointment_location: appointment?.location || '',
     clinician_name: profile?.full_name || '',

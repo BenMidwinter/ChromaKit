@@ -1,45 +1,31 @@
 import { useState } from 'react'
-import { getAllWorkplaces, addWorkplace } from '../../lib/store'
+import { useAddWorkplaceMutation, useOrgWorkplacesQuery } from '../../lib/orgQueries'
+import OrgConfigBlock from './blocks/OrgConfigBlock'
 
 export default function ServiceLeadWorkplaces() {
-  const [workplaces, setWorkplaces] = useState(() => getAllWorkplaces())
+  const { data: workplaces = [] } = useOrgWorkplacesQuery()
+  const addWorkplace = useAddWorkplaceMutation()
   const [name, setName] = useState('')
   const [joinCode, setJoinCode] = useState('')
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const refresh = () => setWorkplaces(getAllWorkplaces())
-
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault()
     setError('')
-    setSaving(true)
     try {
-      addWorkplace({ name, join_code: joinCode })
+      await addWorkplace.mutateAsync({ name, join_code: joinCode })
       setName('')
       setJoinCode('')
-      refresh()
     } catch (err) {
       setError(err.message)
-    } finally {
-      setSaving(false)
     }
   }
 
   return (
-    <div className="service-lead-panel">
-      <header className="service-lead-panel__header">
-        <div>
-          <h2>Workplaces</h2>
-          <p className="text-muted text-small">
-            Create organisation workplaces. Clinicians search for a site and request to join; clinical leads approve membership. Join codes are for internal reference only.
-          </p>
-        </div>
-      </header>
-
-      <section className="service-lead-panel__section">
-        <h3 className="service-lead-panel__section-title">Add workplace</h3>
-        <form onSubmit={handleAdd} className="form-grid service-lead-panel__form">
+    <OrgConfigBlock blockId="org_workplaces">
+      <div className="role-block__panel">
+        <h3 className="role-block__panel-title">Add workplace</h3>
+        <form onSubmit={handleAdd} className="form-grid role-block__form">
           <div className="form-group">
             <label>Workplace name</label>
             <input className="paper-input" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Chroma North Hub" />
@@ -50,13 +36,15 @@ export default function ServiceLeadWorkplaces() {
           </div>
           {error && <p className="form-error" style={{ gridColumn: '1 / -1' }}>{error}</p>}
           <div className="form-actions" style={{ gridColumn: '1 / -1' }}>
-            <button type="submit" className="primary" disabled={saving}>{saving ? 'Adding…' : 'Add workplace'}</button>
+            <button type="submit" className="primary" disabled={addWorkplace.isPending}>
+              {addWorkplace.isPending ? 'Adding…' : 'Add workplace'}
+            </button>
           </div>
         </form>
-      </section>
+      </div>
 
-      <section className="service-lead-panel__section">
-        <h3 className="service-lead-panel__section-title">All workplaces ({workplaces.length})</h3>
+      <div className="role-block__panel">
+        <h3 className="role-block__panel-title">All workplaces ({workplaces.length})</h3>
         <div className="lead-table-wrap">
           <table className="lead-table">
             <thead>
@@ -73,7 +61,7 @@ export default function ServiceLeadWorkplaces() {
             </tbody>
           </table>
         </div>
-      </section>
-    </div>
+      </div>
+    </OrgConfigBlock>
   )
 }

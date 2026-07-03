@@ -1,14 +1,24 @@
 import { APPOINTMENT_TYPES, ATTENDANCE_STATUSES } from './mockData'
 import { compareYmd, compareTime, formatDisplayDate, DEMO_TODAY, addDaysYmd } from './dateArchitecture'
 
-export function appointmentSchedule(appt) {
+export interface AppointmentLike {
+  session_date?: string
+  start_time?: string
+  end_time?: string
+  scheduled_at?: string
+  appointment_type?: string
+  attendance_status?: string | null
+  location?: string
+}
+
+export function appointmentSchedule(appt: AppointmentLike | null | undefined) {
   if (!appt) return { session_date: '', start_time: '' }
   if (appt.session_date && appt.start_time) {
     return { session_date: appt.session_date, start_time: appt.start_time }
   }
   if (appt.scheduled_at) {
     const d = new Date(appt.scheduled_at)
-    const pad = n => String(n).padStart(2, '0')
+    const pad = (n: number) => String(n).padStart(2, '0')
     return {
       session_date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
       start_time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
@@ -17,13 +27,13 @@ export function appointmentSchedule(appt) {
   return { session_date: '', start_time: '' }
 }
 
-export function appointmentInstant(appt) {
+export function appointmentInstant(appt: AppointmentLike | null | undefined): string {
   const { session_date, start_time } = appointmentSchedule(appt)
   if (!session_date) return ''
   return `${session_date}T${start_time || '00:00'}:00`
 }
 
-export function formatAppointmentDateTime(apptOrIso) {
+export function formatAppointmentDateTime(apptOrIso: AppointmentLike | string | null | undefined): string {
   const iso = typeof apptOrIso === 'object' ? appointmentInstant(apptOrIso) : apptOrIso
   if (!iso) return ''
   const d = new Date(iso)
@@ -37,7 +47,7 @@ export function formatAppointmentDateTime(apptOrIso) {
   })
 }
 
-export function formatAppointmentDate(apptOrIso) {
+export function formatAppointmentDate(apptOrIso: AppointmentLike | string | null | undefined): string {
   if (typeof apptOrIso === 'object' && apptOrIso?.session_date) {
     return formatDisplayDate(apptOrIso.session_date)
   }
@@ -46,15 +56,15 @@ export function formatAppointmentDate(apptOrIso) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export function toDatetimeLocalValue(source) {
+export function toDatetimeLocalValue(source: AppointmentLike | string | null | undefined): string {
   const iso = typeof source === 'object' ? appointmentInstant(source) : source
   if (!iso) return ''
   const d = new Date(iso)
-  const pad = n => String(n).padStart(2, '0')
+  const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-export function fromDatetimeLocalValue(value) {
+export function fromDatetimeLocalValue(value: string) {
   if (!value) return { session_date: '', start_time: '', scheduled_at: '' }
   const [datePart, timePart] = value.split('T')
   const start_time = (timePart || '00:00').slice(0, 5)
@@ -65,16 +75,16 @@ export function fromDatetimeLocalValue(value) {
   }
 }
 
-export function sessionDateFromAppointment(apptOrIso) {
+export function sessionDateFromAppointment(apptOrIso: AppointmentLike | string): string {
   if (typeof apptOrIso === 'object') {
     return appointmentSchedule(apptOrIso).session_date
   }
   const d = new Date(apptOrIso)
-  const pad = n => String(n).padStart(2, '0')
+  const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-export function formatAppointmentTime(apptOrIso) {
+export function formatAppointmentTime(apptOrIso: AppointmentLike | string | null | undefined): string {
   if (typeof apptOrIso === 'object' && apptOrIso?.start_time) {
     return apptOrIso.start_time
   }
@@ -84,36 +94,36 @@ export function formatAppointmentTime(apptOrIso) {
 }
 
 /** Date + time for lists — e.g. "26 Jun 2026 · 14:00" */
-export function formatSessionDateTime(appt) {
+export function formatSessionDateTime(appt: AppointmentLike | null | undefined): string {
   const { session_date, start_time } = appointmentSchedule(appt)
   if (!session_date) return ''
   const datePart = formatDisplayDate(session_date)
   return start_time ? `${datePart} · ${start_time}` : datePart
 }
 
-export function appointmentTypeLabel(type) {
-  return APPOINTMENT_TYPES[type] || type
+export function appointmentTypeLabel(type: string | null | undefined): string {
+  return APPOINTMENT_TYPES[type as keyof typeof APPOINTMENT_TYPES] || type || ''
 }
 
-export function attendanceLabel(status) {
+export function attendanceLabel(status: string | null | undefined): string {
   if (!status) return 'Not logged'
-  return ATTENDANCE_STATUSES[status] || status
+  return ATTENDANCE_STATUSES[status as keyof typeof ATTENDANCE_STATUSES] || status
 }
 
-export function attendanceBadgeClass(status) {
+export function attendanceBadgeClass(status: string | null | undefined): string {
   if (status === 'attended') return 'badge-green'
   if (status === 'did_not_attend') return 'badge-grey'
   if (status === 'cancelled') return 'badge-grey'
   return 'badge-blue'
 }
 
-function parseTimeMinutes(time) {
+function parseTimeMinutes(time: string | null | undefined): number {
   if (!time) return 0
   const [h, m] = String(time).split(':').map(Number)
   return (h || 0) * 60 + (m || 0)
 }
 
-export function appointmentDurationMinutes(appt) {
+export function appointmentDurationMinutes(appt: AppointmentLike | null | undefined): number {
   if (!appt) return 60
   if (appt.end_time && appt.start_time) {
     const diff = parseTimeMinutes(appt.end_time) - parseTimeMinutes(appt.start_time)
@@ -122,7 +132,7 @@ export function appointmentDurationMinutes(appt) {
   return 60
 }
 
-export function formatAgendaDayHeading(ymd, { relative = false } = {}) {
+export function formatAgendaDayHeading(ymd: string, { relative = false }: { relative?: boolean } = {}): string {
   const label = formatDisplayDate(ymd)
   if (!relative) return label
   if (ymd === DEMO_TODAY) return `Today · ${label}`
@@ -130,7 +140,7 @@ export function formatAgendaDayHeading(ymd, { relative = false } = {}) {
   return label
 }
 
-export function groupAppointmentsForAgenda(appointments) {
+export function groupAppointmentsForAgenda(appointments: AppointmentLike[]) {
   const today = DEMO_TODAY
   const tomorrow = addDaysYmd(today, 1)
 
@@ -145,7 +155,7 @@ export function groupAppointmentsForAgenda(appointments) {
     else if (compareYmd(session_date, today) > 0) laterItems.push(appt)
   }
 
-  const sortByTime = (a, b) => compareTime(
+  const sortByTime = (a: AppointmentLike, b: AppointmentLike) => compareTime(
     appointmentSchedule(a).start_time,
     appointmentSchedule(b).start_time,
   )

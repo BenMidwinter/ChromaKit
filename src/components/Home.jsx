@@ -2,8 +2,7 @@ import { Navigate, useOutletContext } from 'react-router-dom'
 import { ROLES } from '../lib/permissions'
 import { usePermissions } from '../lib/usePermissions'
 import PageHeader from './PageHeader'
-import LeadDashboard from './LeadDashboard'
-import ClinicianHome from './ClinicianHome'
+import HomeDashboard from './home/HomeDashboard'
 
 export default function Home() {
   const { session, myWorkplace, clients, activePersona, demoRole } = useOutletContext()
@@ -13,33 +12,24 @@ export default function Home() {
     return <Navigate to="/service-lead" replace />
   }
 
-  if (demoRole === ROLES.CLINICAL_LEAD && myWorkplace) {
-    return (
-      <div className="page page--home">
-        <PageHeader
-          title={`Welcome back, ${activePersona.name}`}
-          subtitle={`${myWorkplace.name} — weekly operations, caseload, and upcoming sessions.`}
-        />
-        <LeadDashboard
-          scope="workplace"
-          workplaceId={myWorkplace.id}
-          workplaceName={myWorkplace.name}
-          userId={session.user.id}
-          demoRole={demoRole}
-          clients={clients}
-          blurNames={perms.blurClientIdentity}
-        />
-      </div>
-    )
-  }
+  const subtitle = myWorkplace
+    ? `${myWorkplace.name} · ${perms.roleLabel} overview`
+    : `${perms.roleLabel} overview`
 
   return (
-    <ClinicianHome
-      session={session}
-      myWorkplace={myWorkplace}
-      clients={clients}
-      activePersona={activePersona}
-      blurNames={perms.blurClientIdentity}
-    />
+    <div className="page page--home">
+      <PageHeader
+        title={`Welcome back, ${activePersona.name}`}
+        subtitle={subtitle}
+      />
+      <HomeDashboard
+        session={session}
+        myWorkplace={myWorkplace}
+        clients={clients}
+        activePersona={activePersona}
+        demoRole={demoRole}
+        blurNames={perms.blurClientIdentity}
+      />
+    </div>
   )
 }

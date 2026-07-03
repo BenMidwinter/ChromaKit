@@ -1,4 +1,5 @@
 import { db, uid } from '../data/collections'
+import { parseOrThrow, orgTemplateInputSchema } from '../schemas'
 
 /* ── Progress note templates ──────────────────────────────────────────── */
 
@@ -17,22 +18,23 @@ export function getProgressNoteTemplate(templateId) {
 }
 
 export function saveProgressNoteTemplate(payload) {
+  const data = parseOrThrow(orgTemplateInputSchema, payload, 'Progress note template')
   const now = new Date().toISOString()
-  const workplace = payload.workplace_id
-    ? db.workplaces.find(w => w.id === payload.workplace_id)
+  const workplace = data.workplace_id
+    ? db.workplaces.find(w => w.id === data.workplace_id)
     : null
 
-  if (payload.id) {
-    const idx = db.progressNoteTemplates.findIndex(t => t.id === payload.id)
+  if (data.id) {
+    const idx = db.progressNoteTemplates.findIndex(t => t.id === data.id)
     if (idx === -1) throw new Error('Template not found')
     db.progressNoteTemplates[idx] = {
       ...db.progressNoteTemplates[idx],
-      name: payload.name?.trim() || db.progressNoteTemplates[idx].name,
-      description: payload.description ?? '',
-      workplace_id: payload.workplace_id || null,
+      name: data.name,
+      description: data.description ?? '',
+      workplace_id: data.workplace_id || null,
       workplace_name: workplace?.name || 'All workplaces',
-      content: payload.content ?? db.progressNoteTemplates[idx].content,
-      is_active: payload.is_active ?? db.progressNoteTemplates[idx].is_active,
+      content: data.content ?? db.progressNoteTemplates[idx].content,
+      is_active: data.is_active ?? db.progressNoteTemplates[idx].is_active,
       updated_at: now,
     }
     return db.progressNoteTemplates[idx]
@@ -40,12 +42,12 @@ export function saveProgressNoteTemplate(payload) {
 
   const created = {
     id: uid('pnt'),
-    name: payload.name?.trim() || 'Untitled template',
-    description: payload.description || '',
-    workplace_id: payload.workplace_id || null,
+    name: data.name,
+    description: data.description || '',
+    workplace_id: data.workplace_id || null,
     workplace_name: workplace?.name || 'All workplaces',
-    content: payload.content || '<p></p>',
-    is_active: payload.is_active ?? true,
+    content: data.content || '<p></p>',
+    is_active: data.is_active ?? true,
     created_at: now,
     updated_at: now,
   }
@@ -70,22 +72,23 @@ export function getLetterTemplate(templateId) {
 }
 
 export function saveLetterTemplate(payload) {
+  const data = parseOrThrow(orgTemplateInputSchema, payload, 'Letter template')
   const now = new Date().toISOString()
-  const workplace = payload.workplace_id
-    ? db.workplaces.find(w => w.id === payload.workplace_id)
+  const workplace = data.workplace_id
+    ? db.workplaces.find(w => w.id === data.workplace_id)
     : null
 
-  if (payload.id) {
-    const idx = db.letterTemplates.findIndex(t => t.id === payload.id)
+  if (data.id) {
+    const idx = db.letterTemplates.findIndex(t => t.id === data.id)
     if (idx === -1) throw new Error('Template not found')
     db.letterTemplates[idx] = {
       ...db.letterTemplates[idx],
-      name: payload.name?.trim() || db.letterTemplates[idx].name,
-      description: payload.description ?? '',
-      workplace_id: payload.workplace_id || null,
+      name: data.name,
+      description: data.description ?? '',
+      workplace_id: data.workplace_id || null,
       workplace_name: workplace?.name || 'All workplaces',
-      content: payload.content ?? db.letterTemplates[idx].content,
-      is_active: payload.is_active ?? db.letterTemplates[idx].is_active,
+      content: data.content ?? db.letterTemplates[idx].content,
+      is_active: data.is_active ?? db.letterTemplates[idx].is_active,
       updated_at: now,
     }
     return db.letterTemplates[idx]
@@ -93,12 +96,12 @@ export function saveLetterTemplate(payload) {
 
   const created = {
     id: uid('lt'),
-    name: payload.name?.trim() || 'Untitled template',
-    description: payload.description || '',
-    workplace_id: payload.workplace_id || null,
+    name: data.name,
+    description: data.description || '',
+    workplace_id: data.workplace_id || null,
     workplace_name: workplace?.name || 'All workplaces',
-    content: payload.content || '<p></p>',
-    is_active: payload.is_active ?? true,
+    content: data.content || '<p></p>',
+    is_active: data.is_active ?? true,
     created_at: now,
     updated_at: now,
   }

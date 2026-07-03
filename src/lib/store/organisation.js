@@ -1,4 +1,5 @@
 import { db, uid } from '../data/collections'
+import { parseOrThrow, clinicianUserInputSchema, orgServiceInputSchema, workplaceInputSchema } from '../schemas'
 import {
   canManageWorkplace,
   canManageTeamMembership,
@@ -131,10 +132,10 @@ export function getAllWorkplacesList() {
   return [...db.workplaces]
 }
 
-export function addWorkplace({ name, join_code }) {
-  const trimmed = name?.trim()
-  if (!trimmed) throw new Error('Workplace name is required.')
-  const code = (join_code?.trim() || trimmed.toUpperCase().replace(/\s+/g, '').slice(0, 12))
+export function addWorkplace(payload) {
+  const data = parseOrThrow(workplaceInputSchema, payload, 'Workplace')
+  const trimmed = data.name
+  const code = (data.join_code || trimmed.toUpperCase().replace(/\s+/g, '').slice(0, 12))
   const created = {
     id: uid('wp'),
     name: trimmed,
@@ -249,9 +250,9 @@ export function requestWorkplaceMembership(userId, workplaceId, message = '') {
   return created
 }
 
-export function approveMembershipRequest(requestId, actorId, myWorkplace) {
+export function approveMembershipRequest(requestId, actorId, myWorkplace, role = 'clinician') {
   if (!canManageTeamMembership(myWorkplace)) {
-    throw new Error('Only a clinical lead can approve join requests.')
+    throw new Error('Only a clinical lead or administrator can approve join requests.')
   }
   const idx = db.membershipRequests.findIndex(r => r.id === requestId)
   if (idx === -1) throw new Error('Request not found.')
@@ -266,7 +267,7 @@ export function approveMembershipRequest(requestId, actorId, myWorkplace) {
   db.memberships.push({
     user_id: request.user_id,
     workplace_id: request.workplace_id,
-    role: request.requested_role || 'clinician',
+    role: role || request.requested_role || 'clinician',
   })
 
   const profile = db.profiles.find(p => p.id === request.user_id)
@@ -289,7 +290,7 @@ export function approveMembershipRequest(requestId, actorId, myWorkplace) {
 
 export function declineMembershipRequest(requestId, actorId, myWorkplace) {
   if (!canManageTeamMembership(myWorkplace)) {
-    throw new Error('Only a clinical lead can decline join requests.')
+    throw new Error('Only a clinical lead or administrator can decline join requests.')
   }
   const idx = db.membershipRequests.findIndex(r => r.id === requestId)
   if (idx === -1) throw new Error('Request not found.')
@@ -317,7 +318,7 @@ export function declineMembershipRequest(requestId, actorId, myWorkplace) {
 
 export function inviteClinicianToWorkplace(workplaceId, userId, actorId, myWorkplace, role = 'clinician') {
   if (!canManageTeamMembership(myWorkplace) || myWorkplace?.id !== workplaceId) {
-    throw new Error('Only a clinical lead can invite clinicians.')
+    throw new Error('Only a clinical lead or administrator can invite clinicians.')
   }
   if (isWorkplaceMember(userId, workplaceId)) {
     throw new Error('This clinician is already on the team.')
@@ -349,6 +350,32 @@ export function inviteClinicianToWorkplace(workplaceId, userId, actorId, myWorkp
   return getWorkplaceMembers(workplaceId, myWorkplace)
 }
 
+export function updateWorkplaceMemberRole(workplaceId, memberUserId, newRole, actorId, myWorkplace) {
+  if (!canManageTeamMembership(myWorkplace) || myWorkplace?.id !== workplaceId) {
+    throw new Error('Only a clinical lead or administrator can change team roles.')
+  }
+  const role = normalizeRole(newRole)
+  if (![ROLES.CLINICIAN, ROLES.ADMINISTRATOR, ROLES.CLINICAL_LEAD].includes(role)) {
+    throw new Error('Invalid role.')
+  }
+
+  const idx = db.memberships.findIndex(m => m.user_id === memberUserId && m.workplace_id === workplaceId)
+  if (idx === -1) throw new Error('Team member not found.')
+
+  const profile = db.profiles.find(p => p.id === memberUserId)
+  const previous = db.memberships[idx].role
+  db.memberships[idx] = { ...db.memberships[idx], role }
+
+  appendAuditLog({
+    workplace_id: workplaceId,
+    actor_id: actorId,
+    action: 'membership_role_changed',
+    detail: `Changed ${profile?.full_name || 'team member'} role from ${previous} to ${role}`,
+  })
+
+  return getWorkplaceMembers(workplaceId, myWorkplace)
+}
+
 export function getTeamMemberProfile(userId, workplaceId, myWorkplace) {
   if (!workplaceId || myWorkplace?.id !== workplaceId) return null
   if (!isWorkplaceMember(userId, workplaceId)) return null
@@ -375,17 +402,17 @@ export function getTeamMemberProfile(userId, workplaceId, myWorkplace) {
   }
 }
 
-export function addClinicianUser({ full_name, hcpc_number, job_title, bio = '' }) {
-  const trimmed = full_name?.trim()
-  if (!trimmed) throw new Error('Full name is required.')
+export function addClinicianUser(payload) {
+  const data = parseOrThrow(clinicianUserInputSchema, payload, 'Clinician')
+  const trimmed = data.full_name
 
   const created = {
     id: uid('user'),
     full_name: trimmed,
-    hcpc_number: hcpc_number?.trim() || '',
-    job_title: job_title?.trim() || 'Clinician',
+    hcpc_number: data.hcpc_number || '',
+    job_title: data.job_title || 'Clinician',
     signature_text: trimmed,
-    bio: bio?.trim() || '',
+    bio: data.bio?.trim() || '',
   }
   db.profiles.push(created)
   return created
@@ -413,23 +440,17 @@ export function getOrgServiceForModality(modalityId) {
   return db.orgServices.find(s => s.slug === key || s.id === key) || null
 }
 
-export function addOrgService({
-  service_type = 'appointment',
-  name,
-  description = '',
-  color,
-  slug,
-}) {
-  const trimmed = name?.trim()
-  if (!trimmed) throw new Error('Service name is required.')
-  const type = ['appointment', 'admin', 'busy'].includes(service_type) ? service_type : 'appointment'
+export function addOrgService(payload) {
+  const data = parseOrThrow(orgServiceInputSchema, payload, 'Service')
+  const trimmed = data.name
+  const type = data.service_type || 'appointment'
   const created = {
     id: uid('svc'),
     service_type: type,
     name: trimmed,
-    slug: slug?.trim() || serviceNameToSlug(trimmed),
-    description: description?.trim() || '',
-    color: normalizeServiceColor(color, type),
+    slug: data.slug?.trim() || serviceNameToSlug(trimmed),
+    description: data.description?.trim() || '',
+    color: normalizeServiceColor(data.color, type),
     is_active: true,
     created_at: new Date().toISOString(),
   }

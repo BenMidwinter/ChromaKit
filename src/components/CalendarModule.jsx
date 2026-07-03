@@ -1,4 +1,5 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useOutletContext } from 'react-router-dom'
 import { getAllAppointments, saveAppointment, getClientsForUser } from '../lib/store'
 import {
@@ -34,9 +35,7 @@ import { modalityLabel } from '../lib/calendarConstants'
 import {
   calendarEventStyle,
   calendarDotStyle,
-  calendarLegendStyle,
 } from '../lib/calendarServiceStyles'
-import { getAppointmentOrgServices } from '../lib/store'
 import { shouldBlurClientIdentity } from '../lib/demoPersonas'
 import BlurredName from './BlurredName'
 import { CalendarWorkspaceFrame, CalendarTimeSlot, EventDrawer, ScheduleSessionPanel, RecurringSchedulePanel } from './LayoutComponents'
@@ -178,33 +177,82 @@ function EventChip({ appointment, compact = false, blurNames = false, onSelect, 
   )
 }
 
-function ModalityLegend() {
-  const services = useMemo(() => getAppointmentOrgServices(), [])
-
-  return (
-    <div className="calendar-legend">
-      {services.map(svc => (
-        <span
-          key={svc.id}
-          className="calendar-legend__item"
-          style={calendarLegendStyle(svc.slug)}
-        >
-          <span className="calendar-legend__dot" style={calendarDotStyle(svc.slug)} />
-          {svc.name}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-function CalendarViewOptions({ prefs, open, onToggle, onChange }) {
+function CalendarViewOptions({
+  prefs,
+  open,
+  onToggle,
+  onClose,
+  onChange,
+  viewMode,
+  onViewModeChange,
+  calendarOwner,
+  ownerOptions,
+  showOwnerPicker,
+  onOwnerChange,
+}) {
   const [intervalDraft, setIntervalDraft] = useState(String(prefs.intervalMinutes))
   const [prevInterval, setPrevInterval] = useState(prefs.intervalMinutes)
+  const [panelPos, setPanelPos] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef(null)
+  const panelRef = useRef(null)
 
   if (prefs.intervalMinutes !== prevInterval) {
     setPrevInterval(prefs.intervalMinutes)
     setIntervalDraft(String(prefs.intervalMinutes))
   }
+
+  const updatePanelPosition = useCallback(() => {
+    const trigger = triggerRef.current
+    const panel = panelRef.current
+    if (!trigger || !panel) return
+
+    const rect = trigger.getBoundingClientRect()
+    const panelWidth = panel.offsetWidth
+    const gap = 6
+    const margin = 8
+    const top = rect.bottom + gap
+    let left = rect.right - panelWidth
+    left = Math.max(margin, Math.min(left, window.innerWidth - panelWidth - margin))
+
+    setPanelPos({ top, left })
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!open) return
+    updatePanelPosition()
+  }, [open, updatePanelPosition])
+
+  useEffect(() => {
+    if (!open) return
+
+    const onScrollOrResize = () => updatePanelPosition()
+    window.addEventListener('resize', onScrollOrResize)
+    window.addEventListener('scroll', onScrollOrResize, true)
+
+    return () => {
+      window.removeEventListener('resize', onScrollOrResize)
+      window.removeEventListener('scroll', onScrollOrResize, true)
+    }
+  }, [open, updatePanelPosition])
+
+  useEffect(() => {
+    if (!open) return
+
+    const onPointerDown = (e) => {
+      if (triggerRef.current?.contains(e.target) || panelRef.current?.contains(e.target)) return
+      onClose()
+    }
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open, onClose])
 
   const commitInterval = () => {
     if (intervalDraft.trim() === '') {
@@ -214,65 +262,103 @@ function CalendarViewOptions({ prefs, open, onToggle, onChange }) {
     onChange({ intervalMinutes: intervalDraft })
   }
 
+  const panel = open ? (
+    <div
+      ref={panelRef}
+      className="calendar-view-options__panel"
+      style={{ top: panelPos.top, left: panelPos.left }}
+      role="dialog"
+      aria-label="Calendar view options"
+    >
+      <div className="calendar-view-options__field">
+        <label htmlFor="calendar-view-mode">View</label>
+        <select
+          id="calendar-view-mode"
+          className="paper-input"
+          value={viewMode}
+          onChange={e => onViewModeChange(e.target.value)}
+        >
+          {VIEW_MODES.map(mode => (
+            <option key={mode.id} value={mode.id}>{mode.label}</option>
+          ))}
+        </select>
+      </div>
+      {showOwnerPicker && (
+        <div className="calendar-view-options__field">
+          <label htmlFor="calendar-owner-select">View as</label>
+          <select
+            id="calendar-owner-select"
+            className="paper-input"
+            value={calendarOwner}
+            onChange={e => onOwnerChange(e.target.value)}
+          >
+            {ownerOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      <div className="calendar-view-options__field">
+        <label htmlFor="calendar-start-hour">Day starts</label>
+        <select
+          id="calendar-start-hour"
+          className="paper-input"
+          value={prefs.startHour}
+          onChange={e => onChange({ startHour: Number(e.target.value) })}
+        >
+          {CALENDAR_START_HOUR_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+      <div className="calendar-view-options__field">
+        <label htmlFor="calendar-end-hour">Day ends</label>
+        <select
+          id="calendar-end-hour"
+          className="paper-input"
+          value={prefs.endHour}
+          onChange={e => onChange({ endHour: Number(e.target.value) })}
+        >
+          {CALENDAR_END_HOUR_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+      <div className="calendar-view-options__field">
+        <label htmlFor="calendar-interval">Slot interval (minutes)</label>
+        <input
+          id="calendar-interval"
+          type="number"
+          inputMode="numeric"
+          min={MIN_CALENDAR_INTERVAL}
+          max={MAX_CALENDAR_INTERVAL}
+          step={5}
+          className="paper-input"
+          value={intervalDraft}
+          onChange={e => setIntervalDraft(e.target.value)}
+          onBlur={commitInterval}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitInterval() } }}
+        />
+      </div>
+      <p className="calendar-view-options__hint text-small text-muted">
+        Grid lines mark each interval; events still span their true length.
+      </p>
+    </div>
+  ) : null
+
   return (
     <div className="calendar-view-options">
       <button
+        ref={triggerRef}
         type="button"
         className={`calendar-toolbar__btn calendar-view-options__trigger${open ? ' calendar-view-options__trigger--open' : ''}`}
         onClick={onToggle}
         aria-expanded={open}
+        aria-haspopup="dialog"
       >
         View options
       </button>
-      {open && (
-        <div className="calendar-view-options__panel">
-          <div className="calendar-view-options__field">
-            <label htmlFor="calendar-start-hour">Day starts</label>
-            <select
-              id="calendar-start-hour"
-              className="paper-input"
-              value={prefs.startHour}
-              onChange={e => onChange({ startHour: Number(e.target.value) })}
-            >
-              {CALENDAR_START_HOUR_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="calendar-view-options__field">
-            <label htmlFor="calendar-end-hour">Day ends</label>
-            <select
-              id="calendar-end-hour"
-              className="paper-input"
-              value={prefs.endHour}
-              onChange={e => onChange({ endHour: Number(e.target.value) })}
-            >
-              {CALENDAR_END_HOUR_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="calendar-view-options__field">
-            <label htmlFor="calendar-interval">Slot interval (minutes)</label>
-            <input
-              id="calendar-interval"
-              type="number"
-              inputMode="numeric"
-              min={MIN_CALENDAR_INTERVAL}
-              max={MAX_CALENDAR_INTERVAL}
-              step={5}
-              className="paper-input"
-              value={intervalDraft}
-              onChange={e => setIntervalDraft(e.target.value)}
-              onBlur={commitInterval}
-              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitInterval() } }}
-            />
-          </div>
-          <p className="calendar-view-options__hint text-small text-muted">
-            Grid lines mark each interval; events still span their true length.
-          </p>
-        </div>
-      )}
+      {panel && createPortal(panel, document.body)}
     </div>
   )
 }
@@ -361,22 +447,29 @@ function DayColumn({
   onSelectAppointment,
   selectedAppointmentId,
   onEmptySlotClick,
+  className,
+  style,
 }) {
   const laidOut = useMemo(
     () => layoutDayEvents(appts, dayStartMin, dayEndMin),
     [appts, dayStartMin, dayEndMin],
   )
 
+  const slotsPerHour = subSlotMinutes.length || 1
+
   return (
-    <div className="calendar-col">
+    <div
+      className={`calendar-col${className ? ` ${className}` : ''}`}
+      style={{ '--calendar-slots-per-hour': slotsPerHour, ...style }}
+    >
       {hours.map(hour => (
         <div key={hour} className="calendar-col__hour">
-          {subSlotMinutes.map((minute, i) => {
+          {subSlotMinutes.map((minute) => {
             const slot = hhmm(hour, minute)
             return (
               <CalendarTimeSlot
                 key={slot}
-                className={`calendar-col__slot${i > 0 ? ' calendar-col__slot--sub' : ''}`}
+                className="calendar-col__slot"
                 onClick={() => onEmptySlotClick?.(ymd, slot)}
                 title={`Book ${ymd} at ${slot}`}
               />
@@ -419,6 +512,7 @@ function TimeGridView({
   dayStartMin,
   dayEndMin,
   onEmptySlotClick,
+  showDayHeaders = true,
 }) {
   const byDate = useMemo(() => {
     const map = {}
@@ -430,51 +524,85 @@ function TimeGridView({
   }, [appointments])
 
   const colCount = dates.length
+  const hourCount = hours.length
+  const slotsPerHour = subSlotMinutes.length || 1
+  const headerRowOffset = showDayHeaders ? 1 : 0
+  const firstHourRow = headerRowOffset + 1
+  const dayColSpanEnd = firstHourRow + hourCount
+
+  const gridStyle = {
+    '--calendar-cols': colCount,
+    '--calendar-hours': hourCount,
+    '--calendar-slots-per-hour': slotsPerHour,
+    '--calendar-header-rows': headerRowOffset,
+  }
 
   return (
     <div className="calendar-time-grid-wrap">
-      <div className="calendar-time-grid" style={{ '--calendar-cols': colCount }}>
-        <div className="calendar-time-grid__corner" />
-        {dates.map(ymd => {
-          const isToday = ymd === DEMO_TODAY
-          const isActive = ymd === activeDate
-          return (
-            <button
-              key={ymd}
-              type="button"
-              onClick={() => onSelectDate(ymd)}
-              className={`calendar-time-grid__day-head${isActive ? ' calendar-time-grid__day-head--active' : ''}`}
-            >
-              <span className="calendar-time-grid__weekday">{formatWeekdayShort(ymd)}</span>
-              <span className={`calendar-time-grid__date${isToday ? ' calendar-time-grid__date--today' : ''}`}>
-                {Number(ymd.slice(-2))}
-              </span>
-            </button>
-          )
-        })}
+      <div className="calendar-time-grid-scroll">
+        <div
+          className={`calendar-time-grid${showDayHeaders ? '' : ' calendar-time-grid--day-only'}`}
+          style={gridStyle}
+        >
+          {showDayHeaders && (
+            <>
+              <div
+                className="calendar-time-grid__corner"
+                aria-hidden="true"
+                style={{ gridColumn: 1, gridRow: 1 }}
+              />
+              {dates.map((ymd, colIdx) => {
+                const isToday = ymd === DEMO_TODAY
+                const isActive = ymd === activeDate
+                return (
+                  <button
+                    key={ymd}
+                    type="button"
+                    onClick={() => onSelectDate(ymd)}
+                    className={`calendar-time-grid__day-head${isActive ? ' calendar-time-grid__day-head--active' : ''}`}
+                    style={{ gridColumn: colIdx + 2, gridRow: 1 }}
+                  >
+                    <span className="calendar-time-grid__weekday">{formatWeekdayShort(ymd)}</span>
+                    <span className={`calendar-time-grid__date${isToday ? ' calendar-time-grid__date--today' : ''}`}>
+                      {Number(ymd.slice(-2))}
+                    </span>
+                  </button>
+                )
+              })}
+            </>
+          )}
 
-        <div className="calendar-time-grid__gutter">
-          {hours.map(hour => (
-            <div key={hour} className="calendar-time-grid__hour-label">{hhmm(hour, 0)}</div>
+          {hours.map((hour, hourIdx) => (
+            <div
+              key={`label-${hour}`}
+              className={`calendar-time-grid__hour-label${hourIdx === 0 ? ' calendar-time-grid__hour-label--first' : ''}`}
+              style={{ gridColumn: 1, gridRow: hourIdx + firstHourRow }}
+            >
+              <span>{hhmm(hour, 0)}</span>
+            </div>
+          ))}
+
+          {dates.map((ymd, colIdx) => (
+            <DayColumn
+              key={ymd}
+              ymd={ymd}
+              appts={byDate[ymd] || []}
+              hours={hours}
+              subSlotMinutes={subSlotMinutes}
+              dayStartMin={dayStartMin}
+              dayEndMin={dayEndMin}
+              blurNames={blurNames}
+              compact={colCount > 1}
+              onSelectAppointment={onSelectAppointment}
+              selectedAppointmentId={selectedAppointmentId}
+              onEmptySlotClick={onEmptySlotClick}
+              style={{
+                gridColumn: colIdx + 2,
+                gridRow: `${firstHourRow} / ${dayColSpanEnd}`,
+              }}
+            />
           ))}
         </div>
-
-        {dates.map(ymd => (
-          <DayColumn
-            key={ymd}
-            ymd={ymd}
-            appts={byDate[ymd] || []}
-            hours={hours}
-            subSlotMinutes={subSlotMinutes}
-            dayStartMin={dayStartMin}
-            dayEndMin={dayEndMin}
-            blurNames={blurNames}
-            compact={colCount > 1}
-            onSelectAppointment={onSelectAppointment}
-            selectedAppointmentId={selectedAppointmentId}
-            onEmptySlotClick={onEmptySlotClick}
-          />
-        ))}
       </div>
     </div>
   )
@@ -503,33 +631,28 @@ function DayView({
         <h3 className="calendar-day__title">{formatLongDate(activeDate)}</h3>
         <p className="calendar-day__count">{dayAppts.length} session{dayAppts.length === 1 ? '' : 's'}</p>
       </div>
-      <div className="calendar-day__timeline">
-        <div className="calendar-day__gutter">
-          {hours.map(hour => (
-            <div key={hour} className="calendar-day__hour">{hhmm(hour, 0)}</div>
-          ))}
-        </div>
-        <DayColumn
-          ymd={activeDate}
-          appts={dayAppts}
-          hours={hours}
-          subSlotMinutes={subSlotMinutes}
-          dayStartMin={dayStartMin}
-          dayEndMin={dayEndMin}
-          blurNames={blurNames}
-          compact={false}
-          onSelectAppointment={onSelectAppointment}
-          selectedAppointmentId={selectedAppointmentId}
-          onEmptySlotClick={onEmptySlotClick}
-        />
-      </div>
+      <TimeGridView
+        dates={[activeDate]}
+        appointments={appointments}
+        activeDate={activeDate}
+        onSelectDate={() => {}}
+        blurNames={blurNames}
+        onSelectAppointment={onSelectAppointment}
+        selectedAppointmentId={selectedAppointmentId}
+        hours={hours}
+        subSlotMinutes={subSlotMinutes}
+        dayStartMin={dayStartMin}
+        dayEndMin={dayEndMin}
+        onEmptySlotClick={onEmptySlotClick}
+        showDayHeaders={false}
+      />
     </div>
   )
 }
 
 export default function CalendarModule({ persona }) {
   const { myWorkplace, session } = useOutletContext()
-  const [viewMode, setViewMode] = useState('week')
+  const [viewMode, setViewMode] = useState('working-week')
   const [activeDate, setActiveDate] = useState(DEMO_TODAY)
   const [selectedAppointment, setSelectedAppointment] = useState(null)
   const [scheduleDraft, setScheduleDraft] = useState(null)
@@ -782,61 +905,41 @@ export default function CalendarModule({ persona }) {
 
   return (
     <div className="calendar-module">
-      <div className="calendar-toolbar">
-        <div className="calendar-toolbar__row">
-          <div className="calendar-toolbar__nav">
-            <button type="button" className="calendar-toolbar__btn" onClick={() => navigateDate(viewMode === 'month' ? -30 : viewMode === 'day' ? -1 : -7)} aria-label="Previous period">←</button>
-            <button type="button" className="calendar-toolbar__btn" onClick={() => navigateDate(viewMode === 'month' ? 30 : viewMode === 'day' ? 1 : 7)} aria-label="Next period">→</button>
-            <button type="button" className="calendar-toolbar__btn calendar-toolbar__btn--today" onClick={jumpToday}>Today</button>
-            <button type="button" className="calendar-toolbar__btn calendar-toolbar__btn--add" onClick={openAddAppointment}>
-              + Add appointment
-            </button>
-          </div>
-
-          <h2 className="calendar-toolbar__period">{periodLabel}</h2>
-
-          <div className="calendar-toolbar__views">
-            {VIEW_MODES.map(mode => (
-              <button
-                key={mode.id}
-                type="button"
-                onClick={() => setViewMode(mode.id)}
-                className={`calendar-toolbar__view${viewMode === mode.id ? ' calendar-toolbar__view--active' : ''}`}
-              >
-                {mode.label}
-              </button>
-            ))}
-          </div>
+      <header className="page-header page-header--with-toolbar page-header--calendar">
+        <div className="page-header__text">
+          <h1 className="page-header__title">Calendar</h1>
         </div>
-
-        <div className="calendar-toolbar__row calendar-toolbar__row--secondary">
-          <div className="calendar-toolbar__left">
-            <div className="calendar-toolbar__owner">
-              <label htmlFor="calendar-owner-select" className="calendar-toolbar__owner-label">
-                {showOwnerPicker ? 'View calendar for' : 'Your calendar'}
-              </label>
-              <select
-                id="calendar-owner-select"
-                className="calendar-toolbar__owner-select role-select__control"
-                value={calendarOwner}
-                onChange={e => setCalendarOwner(e.target.value)}
-                disabled={!showOwnerPicker}
-              >
-                {ownerOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+        <div className="page-header__toolbar calendar-toolbar">
+          <div className="calendar-toolbar__primary">
+            <button type="button" className="calendar-toolbar__btn calendar-toolbar__btn--add" onClick={openAddAppointment}>
+              + Add Appointment
+            </button>
+            <button type="button" className="calendar-toolbar__btn calendar-toolbar__btn--today" onClick={jumpToday}>
+              Today
+            </button>
+            <div className="calendar-toolbar__nav">
+              <button type="button" className="calendar-toolbar__btn" onClick={() => navigateDate(viewMode === 'month' ? -30 : viewMode === 'day' ? -1 : -7)} aria-label="Previous period">←</button>
+              <button type="button" className="calendar-toolbar__btn" onClick={() => navigateDate(viewMode === 'month' ? 30 : viewMode === 'day' ? 1 : 7)} aria-label="Next period">→</button>
             </div>
+            <p className="calendar-toolbar__period">{periodLabel}</p>
+          </div>
+          <div className="calendar-toolbar__options">
             <CalendarViewOptions
               prefs={viewPrefs}
               open={viewOptionsOpen}
               onToggle={() => setViewOptionsOpen(o => !o)}
+              onClose={() => setViewOptionsOpen(false)}
               onChange={handleViewPrefsChange}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              calendarOwner={calendarOwner}
+              ownerOptions={ownerOptions}
+              showOwnerPicker={showOwnerPicker}
+              onOwnerChange={setCalendarOwner}
             />
           </div>
-          <ModalityLegend />
         </div>
-      </div>
+      </header>
 
       <CalendarWorkspaceFrame
         paneOpen={paneOpen}

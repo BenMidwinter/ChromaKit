@@ -1,5 +1,20 @@
 import { parseCommaTags } from './commaTags'
 
+export interface ClinicalProfile {
+  recurring_themes?: string
+  sensory_considerations?: string
+  preferred_modalities_notes?: string
+  clinical_goals?: string
+  working_formulation?: string
+}
+
+export interface ClientClinicalRecord {
+  diagnosis?: string
+  medication?: string
+  school?: string
+  clinical_profile?: ClinicalProfile
+}
+
 /** Normalised clinical profile field keys (stored on client.clinical_profile). */
 export const CLINICAL_PROFILE_FIELDS = {
   recurring_themes: {
@@ -34,16 +49,22 @@ export const CLINICAL_PROFILE_FIELDS = {
   },
 }
 
-export function tagsFromProfileValue(value) {
+export function tagsFromProfileValue(value: string | null | undefined): string[] {
   if (!value?.trim()) return []
   return parseCommaTags(value)
 }
 
 /** Flat tag list for profile header chips (deduped). */
-export function getClinicalProfileTagLabels(clinicalProfile) {
+export function getClinicalProfileTagLabels(clinicalProfile: ClinicalProfile | null | undefined): string[] {
   if (!clinicalProfile) return []
-  const tags = []
-  for (const key of ['sensory_considerations', 'recurring_themes', 'clinical_goals', 'preferred_modalities_notes']) {
+  const tags: string[] = []
+  const tagKeys: (keyof ClinicalProfile)[] = [
+    'sensory_considerations',
+    'recurring_themes',
+    'clinical_goals',
+    'preferred_modalities_notes',
+  ]
+  for (const key of tagKeys) {
     for (const tag of tagsFromProfileValue(clinicalProfile[key])) {
       if (!tags.includes(tag)) tags.push(tag)
     }
@@ -51,7 +72,11 @@ export function getClinicalProfileTagLabels(clinicalProfile) {
   return tags
 }
 
-function profileValueToInsightItems(value, prefix, { tagField }) {
+function profileValueToInsightItems(
+  value: string | null | undefined,
+  prefix: string,
+  { tagField }: { tagField: boolean },
+) {
   if (!value?.trim()) return []
   if (tagField) {
     return tagsFromProfileValue(value).map((label, index) => ({
@@ -71,20 +96,20 @@ function profileValueToInsightItems(value, prefix, { tagField }) {
 /**
  * Insight sections from saved client.clinical_profile — for sidebar insert & display.
  */
-export function getClinicalProfileInsightSections(clinicalProfile) {
+export function getClinicalProfileInsightSections(clinicalProfile: ClinicalProfile | null | undefined) {
   if (!clinicalProfile) return []
 
   return Object.entries(CLINICAL_PROFILE_FIELDS)
     .map(([key, meta]) => ({
       key,
       title: meta.insightTitle,
-      items: profileValueToInsightItems(clinicalProfile[key], key, meta),
+      items: profileValueToInsightItems(clinicalProfile[key as keyof ClinicalProfile], key, meta),
     }))
     .filter(section => section.items.length > 0)
 }
 
 /** Merge field values from client record + clinical profile. */
-export function clinicalProfileMergeValues(client) {
+export function clinicalProfileMergeValues(client: ClientClinicalRecord | null | undefined) {
   const cp = client?.clinical_profile || {}
   return {
     client_diagnosis: client?.diagnosis || '',

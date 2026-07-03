@@ -1,23 +1,20 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getProgressNoteTemplates } from '../../lib/store'
+import { useProgressNoteTemplatesQuery } from '../../lib/orgQueries'
+import OrgConfigBlock from './blocks/OrgConfigBlock'
 
 export default function ServiceLeadNoteTemplates() {
   const navigate = useNavigate()
-  const [templates] = useState(() => getProgressNoteTemplates())
+  const { data: templates = [] } = useProgressNoteTemplatesQuery()
 
   return (
-    <div className="service-lead-panel">
-      <div className="service-lead-panel__header">
-        <div>
-          <h2>Progress note templates</h2>
-          <p className="text-muted text-small">Standard structures clinicians start from when writing session notes. Use merge fields for client and session details.</p>
-        </div>
+    <OrgConfigBlock
+      blockId="org_note_templates"
+      actions={(
         <button type="button" className="primary" onClick={() => navigate('/service-lead/progress-note-templates/new')}>
           + New template
         </button>
-      </div>
-
+      )}
+    >
       <div className="card">
         {templates.length === 0 ? (
           <div className="empty-state">No templates yet.</div>
@@ -41,6 +38,6 @@ export default function ServiceLeadNoteTemplates() {
           </div>
         )}
       </div>
-    </div>
+    </OrgConfigBlock>
   )
 }

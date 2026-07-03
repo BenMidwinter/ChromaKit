@@ -1,37 +1,45 @@
-import { NavLink } from 'react-router-dom'
-
-const NAV_ITEMS = [
-  { to: '/service-lead', label: 'Overview', end: true },
-  { to: '/service-lead/workplaces', label: 'Workplaces' },
-  { to: '/service-lead/users', label: 'Users' },
-  { to: '/service-lead/services', label: 'Services' },
-  { to: '/service-lead/progress-note-templates', label: 'Note templates' },
-  { to: '/service-lead/letter-templates', label: 'Letter templates' },
-  { to: '/service-lead/outcome-forms', label: 'Outcome forms' },
-]
+import { NavLink, useLocation } from 'react-router-dom'
+import { isServiceLeadNavItemActive, SERVICE_LEAD_NAV_GROUPS } from '../../lib/serviceLeadNav'
 
 export default function ServiceLeadNav() {
+  const { pathname } = useLocation()
+
   return (
-    <nav className="overflow-x-auto border-b border-line-light bg-surface" aria-label="Service Lead">
-      <ul className="m-0 flex list-none flex-nowrap gap-0 px-7 py-0">
-        {NAV_ITEMS.map(({ to, label, end }) => (
-          <li key={to}>
-            <NavLink
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `block whitespace-nowrap border-b-[3px] px-5 py-[0.9rem] text-[0.9375rem] no-underline max-md:px-4 max-md:py-3 max-md:text-[0.875rem] ${
-                  isActive
-                    ? 'border-b-primary font-bold text-primary-dark'
-                    : 'border-b-transparent font-medium text-subtle hover:text-accent hover:no-underline'
-                }`
-              }
-            >
-              {label}
-            </NavLink>
-          </li>
+    <nav className="service-lead-nav" aria-label="Service Lead">
+      <div className="service-lead-nav__groups">
+        {SERVICE_LEAD_NAV_GROUPS.map((group, groupIndex) => (
+          <div
+            key={group.id}
+            className={`service-lead-nav__group${group.label ? ' service-lead-nav__group--labeled' : ''}`}
+          >
+            {group.label && (
+              <span className="service-lead-nav__group-label" aria-hidden>
+                {group.label}
+              </span>
+            )}
+            <ul className="service-lead-nav__list">
+              {group.items.map(item => {
+                const active = isServiceLeadNavItemActive(pathname, item)
+                return (
+                  <li key={item.to}>
+                    <NavLink
+                      to={item.to}
+                      end={item.end}
+                      className={`service-lead-nav__link${active ? ' service-lead-nav__link--active' : ''}`}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      {item.label}
+                    </NavLink>
+                  </li>
+                )
+              })}
+            </ul>
+            {groupIndex < SERVICE_LEAD_NAV_GROUPS.length - 1 && (
+              <span className="service-lead-nav__divider" aria-hidden />
+            )}
+          </div>
         ))}
-      </ul>
+      </div>
     </nav>
   )
 }

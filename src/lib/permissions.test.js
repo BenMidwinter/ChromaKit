@@ -53,9 +53,10 @@ describe('caseload visibility', () => {
     expect(canViewFullWorkplaceCaseload(adminCtx)).toBe(true)
     expect(canViewFullWorkplaceCaseload(clinicianCtx)).toBe(false)
   })
-  it('only clinical lead manages team membership', () => {
+  it('clinical lead and administrator manage team membership', () => {
     expect(canManageTeamMembership(leadCtx)).toBe(true)
-    expect(canManageTeamMembership(adminCtx)).toBe(false)
+    expect(canManageTeamMembership(adminCtx)).toBe(true)
+    expect(canManageTeamMembership(clinicianCtx)).toBe(false)
   })
 })
 

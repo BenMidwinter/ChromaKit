@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { getAllOrgServices, addOrgService } from '../../lib/store'
 import { ORG_SERVICE_TYPES } from '../../lib/mockData'
 import {
   SERVICE_COLOR_PRESETS,
   defaultServiceColor,
   normalizeServiceColor,
 } from '../../lib/serviceColors'
+import { useAddOrgServiceMutation, useOrgServicesQuery } from '../../lib/orgQueries'
+import OrgConfigBlock from './blocks/OrgConfigBlock'
 
 const SERVICE_TYPE_HINTS = {
   appointment: 'Direct clinical sessions with clients — tracked on client profiles.',
@@ -14,27 +15,24 @@ const SERVICE_TYPE_HINTS = {
 }
 
 export default function ServiceLeadServices() {
-  const [services, setServices] = useState(() => getAllOrgServices())
+  const { data: services = [] } = useOrgServicesQuery()
+  const addService = useAddOrgServiceMutation()
   const [serviceType, setServiceType] = useState('appointment')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [color, setColor] = useState(defaultServiceColor('appointment'))
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-
-  const refresh = () => setServices(getAllOrgServices())
 
   const handleTypeChange = (type) => {
     setServiceType(type)
     setColor(defaultServiceColor(type))
   }
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault()
     setError('')
-    setSaving(true)
     try {
-      addOrgService({
+      await addService.mutateAsync({
         service_type: serviceType,
         name,
         description,
@@ -44,28 +42,16 @@ export default function ServiceLeadServices() {
       setDescription('')
       setServiceType('appointment')
       setColor(defaultServiceColor('appointment'))
-      refresh()
     } catch (err) {
       setError(err.message)
-    } finally {
-      setSaving(false)
     }
   }
 
   return (
-    <div className="service-lead-panel">
-      <header className="service-lead-panel__header">
-        <div>
-          <h2>Services</h2>
-          <p className="text-muted text-small">
-            Define services by type so inputs can be tracked against client profiles in future reporting.
-          </p>
-        </div>
-      </header>
-
-      <section className="service-lead-panel__section">
-        <h3 className="service-lead-panel__section-title">Add service</h3>
-        <form onSubmit={handleAdd} className="service-lead-panel__form form-grid">
+    <OrgConfigBlock blockId="org_services">
+      <div className="role-block__panel">
+        <h3 className="role-block__panel-title">Add service</h3>
+        <form onSubmit={handleAdd} className="role-block__form form-grid">
           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <span className="form-label">Service type</span>
             <div className="svc-type-picker" role="radiogroup" aria-label="Service type">
@@ -138,15 +124,15 @@ export default function ServiceLeadServices() {
 
           {error && <p className="form-error" style={{ gridColumn: '1 / -1' }}>{error}</p>}
           <div className="form-actions" style={{ gridColumn: '1 / -1' }}>
-            <button type="submit" className="primary" disabled={saving}>
-              {saving ? 'Adding…' : 'Add service'}
+            <button type="submit" className="primary" disabled={addService.isPending}>
+              {addService.isPending ? 'Adding…' : 'Add service'}
             </button>
           </div>
         </form>
-      </section>
+      </div>
 
-      <section className="service-lead-panel__section">
-        <h3 className="service-lead-panel__section-title">All services ({services.length})</h3>
+      <div className="role-block__panel">
+        <h3 className="role-block__panel-title">All services ({services.length})</h3>
         <div className="svc-list">
           {services.map(svc => (
             <article
@@ -165,7 +151,7 @@ export default function ServiceLeadServices() {
             </article>
           ))}
         </div>
-      </section>
-    </div>
+      </div>
+    </OrgConfigBlock>
   )
 }

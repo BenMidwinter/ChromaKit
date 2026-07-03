@@ -853,51 +853,9 @@ select.progress-notes-page__meta-input {
   margin-bottom: 0.85em;
 }
 
-/* .service-lead layout / shell / nav styles were migrated to Tailwind utilities
-   (pilot). See ServiceLeadLayout.jsx and ServiceLeadNav.jsx. */
-
-.service-lead-panel {
-  padding-top: 1.5rem;
-}
-
-.service-lead-panel__header {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-light);
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.service-lead-panel__header h2 {
-  margin: 0 0 0.25rem;
-  font-size: 1.1rem;
-  color: var(--col-accent);
-}
-
-.service-lead-panel__section {
-  padding: 1.25rem 0;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.service-lead-panel__section-title {
-  margin: 0 0 1rem;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--col-accent);
-}
-
-.service-lead-panel__form {
-  max-width: 36rem;
-}
+/* .service-lead layout / shell / nav styles — see ServiceLeadLayout.jsx, home-calendar.css */
 
 .service-lead-sidebar {
-  display: none;
-}
-
-.page--service-lead .page-header {
   display: none;
 }
 

@@ -58,6 +58,10 @@ export default function AppointmentEditor() {
   const [activeId, setActiveId] = useState(isNew ? null : appointmentId)
   const [linkedNote, setLinkedNote] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [errors, setErrors] = useState({})
+
+  const clearError = (field) =>
+    setErrors(prev => (prev[field] ? { ...prev, [field]: undefined } : prev))
   const [clinicianId, setClinicianId] = useState(session?.user?.id || '')
 
   const canPickClinician = perms.canAssignAppointmentClinician
@@ -168,7 +172,14 @@ export default function AppointmentEditor() {
       toast.error('Session unavailable — please refresh the page.')
       return
     }
-    if (!sessionDate || finalDuration <= 0) return
+    const nextErrors = {}
+    if (!sessionDate) nextErrors.sessionDate = 'Date is required.'
+    if (finalDuration <= 0) nextErrors.duration = 'Duration must be greater than zero.'
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors)
+      return
+    }
+    setErrors({})
     setSaving(true)
     try {
       persistAppointment()
@@ -218,6 +229,9 @@ export default function AppointmentEditor() {
       </div>
 
       <div className="card appointment-form">
+        {errors.form && (
+          <p className="form-error" role="alert" style={{ marginBottom: '1rem' }}>{errors.form}</p>
+        )}
         <div className="form-grid appointment-form__grid">
           <div className="form-group">
             <label htmlFor="appt-date">Date</label>
@@ -226,9 +240,11 @@ export default function AppointmentEditor() {
               type="date"
               className="paper-input"
               value={sessionDate}
-              onChange={e => setSessionDate(e.target.value)}
+              onChange={e => { setSessionDate(e.target.value); clearError('sessionDate') }}
+              aria-invalid={!!errors.sessionDate}
               required
             />
+            {errors.sessionDate && <p className="mt-1 text-[0.8rem] text-secondary">{errors.sessionDate}</p>}
           </div>
           <div className="form-group">
             <label htmlFor="appt-type">Appointment type</label>
@@ -273,12 +289,14 @@ export default function AppointmentEditor() {
               step={5}
               className="paper-input"
               value={durationStr}
-              onChange={e => handleDurationChange(e.target.value)}
+              onChange={e => { handleDurationChange(e.target.value); clearError('duration') }}
               onBlur={e => handleDurationBlur(e.target.value)}
+              aria-invalid={!!errors.duration}
             />
+            {errors.duration && <p className="mt-1 text-[0.8rem] text-secondary">{errors.duration}</p>}
           </div>
         </div>
-        {computedDuration <= 0 && (
+        {computedDuration <= 0 && !errors.duration && (
           <p className="text-small ck-schedule-warning">End time must be after the start time.</p>
         )}
 

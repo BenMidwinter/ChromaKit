@@ -122,121 +122,7 @@
 .svc-card__name { margin: 0; font-size: 0.95rem; font-weight: 700; }
 .svc-card__desc { margin: 0.35rem 0 0; }
 
-/* ── Lead dashboard (Service Lead + Clinical Lead) ── */
-
-.lead-dashboard {
-  padding-bottom: 2rem;
-}
-
-.lead-dashboard__intro {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.lead-dashboard__title {
-  margin: 0;
-  font-size: 1.35rem;
-  color: var(--col-accent);
-}
-
-.lead-dashboard__subtitle {
-  margin: 0.35rem 0 0;
-  font-size: 0.9375rem;
-  color: var(--txt-muted);
-  line-height: 1.55;
-}
-
-.lead-dashboard__section {
-  padding: 1.5rem 0;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.lead-dashboard__section-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.75rem 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.lead-dashboard__section-title {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--col-accent);
-}
-
-.lead-dashboard__section-subtitle {
-  margin: 0.25rem 0 0;
-  font-size: 0.875rem;
-  color: var(--txt-muted);
-}
-
-.lead-dashboard__link {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--col-primary-dark);
-  text-decoration: none;
-}
-
-.lead-dashboard__link:hover {
-  text-decoration: underline;
-}
-
-.lead-dashboard__empty {
-  margin: 0;
-  padding: 0.5rem 0;
-  font-size: 0.9375rem;
-  color: var(--txt-muted);
-}
-
-.lead-dashboard__columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 2rem;
-}
-
-.lead-dashboard__section--half:first-of-type {
-  padding-right: 1rem;
-  border-right: 1px solid var(--border-light);
-}
-
-.lead-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 1rem 1.25rem;
-}
-
-.lead-kpi {
-  padding: 0.85rem 0;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.lead-kpi__label {
-  display: block;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--txt-muted);
-  margin-bottom: 0.25rem;
-}
-
-.lead-kpi__value {
-  display: block;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--col-primary-dark);
-  line-height: 1.1;
-}
-
-.lead-kpi__hint {
-  display: block;
-  margin-top: 0.35rem;
-  font-size: 0.8125rem;
-  color: var(--txt-muted);
-  line-height: 1.4;
-}
+/* tailwind-migration: deferred — service type picker / cards (ServiceLeadServices) */
 
 .lead-table-wrap {
   overflow-x: auto;
@@ -311,18 +197,6 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--col-primary-dark);
-}
-
-@media (max-width: 900px) {
-  .lead-dashboard__columns {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .lead-dashboard__section--half:first-of-type {
-    padding-right: 0;
-    border-right: none;
-  }
 }
 
 .checkbox-label {

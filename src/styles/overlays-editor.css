@@ -1029,6 +1029,12 @@
   border-bottom: 1px solid var(--border-light);
 }
 
+.profile-actions--inline {
+  margin-bottom: 0;
+  border-bottom: none;
+  gap: 0.15rem;
+}
+
 .profile-actions__link {
   display: inline-block;
   padding: 0.55rem 0.85rem;

@@ -133,9 +133,15 @@ export function canManageWorkplace(workplaceContext?: WorkplaceContext | null): 
   return canViewFullWorkplaceCaseload(workplaceContext)
 }
 
-/** Clinical leads approve join requests and invite clinicians to their team. */
+/** Clinical leads and administrators manage team membership at a workplace. */
 export function canManageTeamMembership(workplaceContext?: WorkplaceContext | null): boolean {
-  return getEffectiveRole(workplaceContext) === ROLES.CLINICAL_LEAD
+  const role = getEffectiveRole(workplaceContext)
+  return role === ROLES.CLINICAL_LEAD || role === ROLES.ADMINISTRATOR
+}
+
+export function canViewTeamCaseloadCounts(workplaceContext?: WorkplaceContext | null): boolean {
+  const role = getEffectiveRole(workplaceContext)
+  return role === ROLES.CLINICAL_LEAD || role === ROLES.ADMINISTRATOR
 }
 
 export function isWorkplaceManager(workplaceContext?: WorkplaceContext | null): boolean {
@@ -304,6 +310,7 @@ export function buildPermissions(
     canViewFullCaseload: canViewFullWorkplaceCaseload(workplaceContext),
     canManageWorkplace: canManageWorkplace(workplaceContext),
     canManageTeamMembership: canManageTeamMembership(workplaceContext),
+    canViewTeamCaseloadCounts: canViewTeamCaseloadCounts(workplaceContext),
     canWriteProgressNotes: canWriteProgressNotes(workplaceContext, client, userId),
     canManageRecords: canManageRecords(workplaceContext, client, userId),
     canManageAppointments: canManageAppointments(workplaceContext, client, userId),

@@ -193,6 +193,5 @@ function LegacyNoteRedirect() {
 }
 
 function WorkplaceWrapper() {
-  const navigate = useNavigate()
-  return <Workplace onViewProfile={(client) => navigate(`/clients/${client.id}`)} />
+  return <Workplace />
 }
