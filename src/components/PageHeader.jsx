@@ -1,14 +1,23 @@
-export default function PageHeader({ title, subtitle, actions, toolbar, className = '' }) {
+export default function PageHeader({
+  title,
+  subtitle,
+  actions,
+  toolbar,
+  className = '',
+  /** When false, skip negative horizontal margins (e.g. `page--service-lead` has no inline padding). */
+  bleed = true,
+}) {
   const withToolbar = Boolean(toolbar)
 
   return (
     <header
       className={[
-        'relative flex w-auto flex-wrap items-center',
-        'mx-[calc(-1*var(--space-inline))] mb-[var(--section-gap)]',
-        'border-b border-line-light bg-surface px-[var(--space-inline)] py-3.5',
+        'relative flex flex-wrap items-center',
+        'border-b border-l-4 border-line-light border-l-primary bg-surface px-[var(--space-inline)] py-3.5',
+        bleed
+          ? 'mx-[calc(-1*var(--space-inline))] mb-[var(--section-gap)] w-auto'
+          : 'mx-0 mb-0 w-full shrink-0',
         withToolbar ? 'flex-nowrap gap-x-4 gap-y-2' : 'gap-x-5 gap-y-3',
-        "before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-gradient-to-b before:from-primary before:to-primary-dark before:content-['']",
         className,
       ].filter(Boolean).join(' ')}
     >

@@ -30,7 +30,7 @@ export default function ServiceLeadLayout() {
   return (
     <div className="page page--service-lead">
       <PageHeader
-        className="page-header--service-lead"
+        bleed={false}
         title={pageMeta.title}
         subtitle={pageMeta.subtitle}
       />
