@@ -30,6 +30,7 @@ import {
   sessionDateFromAppointment,
 } from '../../lib/appointmentUtils'
 import { useToast, useConfirm } from '../../components/ui'
+import ErrorBoundary from '../../components/ErrorBoundary'
 
 const RAIL_TABS = {
   INSIGHTS: 'insights',
@@ -153,6 +154,14 @@ function PastCaseNotesPanel({
 }
 
 export default function ProgressNotesPage() {
+  return (
+    <ErrorBoundary label="progress-notes">
+      <ProgressNotesPageContent />
+    </ErrorBoundary>
+  )
+}
+
+function ProgressNotesPageContent() {
   const [searchParams] = useSearchParams()
   const appointmentParam = searchParams.get('appointment')
   const noteParam = searchParams.get('note')

@@ -52,9 +52,9 @@ Status key: `[x]` done · `[~]` partial · `[ ]` not started
 - [ ] Feature folder: `features/home/` (promote from `components/home/`)
 - [ ] Feature folder: `features/profile/` (promote `components/profile/`)
 - [x] Service Lead screens — unified shell (`PageHeader` + grouped nav + `OrgConfigBlock` / overview blocks)
-- [ ] Tailwind: shared shells (`PageHeader`, `RecordListLayout`, `RecordTable`)
-- [ ] Tailwind: client workspace
-- [ ] Tailwind: calendar module
+- [x] Tailwind: shared shells (`PageHeader`, `RecordListLayout`, `RecordTable`)
+- [x] Tailwind: client workspace (`PatientProfile`, `ClientNav`, `ClientDetailsBar`)
+- [x] Tailwind: calendar module header/toolbar (`PageHeader` + utility toolbar in `CalendarModule`)
 - [ ] Tailwind: rich-text / doc editor chrome
 - [~] Service Lead service catalogue widgets — `.svc-*` in `dashboards.css` (deferred; tagged in CSS)
 
@@ -70,15 +70,14 @@ Status key: `[x]` done · `[~]` partial · `[ ]` not started
 
 - [x] TypeScript — **8 modules** (`commaTags`, `serviceColors`, `permissions`, `dateArchitecture`, `appointmentUtils`, `clinicalProfile`, `mergeFields`, `schemas`)
 - [ ] TypeScript: remaining `lib/` (then `lib/store/` domain modules)
-- [ ] Store domain unit tests (selectors/filters after typing)
+- [x] Store domain unit tests (selectors/filters after typing) — `journal`, `scheduling`, `clientRecords`
 
 ### Pillar 4 — Defensive boundaries
 
 - [x] Zod at writes — clients, appointments, progress notes, working docs, letters
 - [x] Zod: progress note / letter **templates** + organisation mutations (workplaces, users, services)
-- [ ] Zod: journal entries, clinical profile / details updates
-- [~] Error boundaries — root, route (`AppLayout`), `Calendar` page
-- [ ] Error boundaries: `ProgressNotesPage`, `BodyMap`, `CalendarModule`, `RichTextEditor`
+- [x] Zod: journal entries, clinical profile / details updates
+- [x] Error boundaries — root, route (`AppLayout`), `Calendar`, `ProgressNotesPage`, `BodyMap`, `CalendarModule` panes, `RichTextEditor`
 - [x] Inline form validation — **AddClient**, **AppointmentEditor**, **ClientDetailsEditModal**, **ClientProfileOverlay**, Service Lead template editors
 
 ---
@@ -167,7 +166,7 @@ npm run lint        # optional; fix only new issues in touched files
 | --- | --- |
 | **B** | Feature folders (`features/client/` first) |
 | **C** | TanStack Query (`appointmentQueries.js` — calendar, client list, upcoming, editor) |
-| **D** | Tailwind on shared shells + client workspace |
+| **D** | Tailwind on shared shells + client workspace + calendar toolbar |
 | **E** | Remaining Zod writes, error boundaries, store tests |
 
 Update this file as items complete — change `[ ]` → `[x]` and add completion notes inline if useful.

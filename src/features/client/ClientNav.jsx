@@ -29,6 +29,14 @@ const NAV_SECTIONS = [
   },
 ]
 
+const linkClass = ({ isActive }) => [
+  'block border-l-[3px] border-transparent px-4 py-2.5 text-sm font-medium leading-snug text-subtle no-underline transition-colors',
+  'hover:border-transparent hover:bg-zone-muted hover:text-accent hover:no-underline',
+  isActive
+    ? 'border-l-primary bg-primary-light font-bold text-primary-dark'
+    : '',
+].filter(Boolean).join(' ')
+
 export default function ClientNav({ clientId, client }) {
   const base = `/clients/${clientId}`
   const { session, myWorkplace } = useOutletContext()
@@ -40,26 +48,25 @@ export default function ClientNav({ clientId, client }) {
   }
 
   return (
-    <nav className="client-sidebar" aria-label="Client sections">
+    <nav
+      className="sticky top-0 flex w-[13.5rem] shrink-0 flex-col gap-0 self-start overflow-x-hidden overflow-y-auto border-r border-line-light bg-surface px-0 pt-3 pb-5 max-h-[calc(100vh-8rem)]"
+      aria-label="Client sections"
+    >
       {NAV_SECTIONS.map((section, i) => {
         const items = section.items.filter(item => isVisible(item.section))
         if (!items.length) return null
 
         return (
-          <div key={section.label || `section-${i}`} className="client-sidebar__section">
+          <div key={section.label || `section-${i}`} className={`flex flex-col ${i > 0 ? 'pt-2.5' : ''}`}>
             {section.label && (
-              <h3 className="client-sidebar__heading">{section.label}</h3>
+              <h3 className="m-0 block px-4 pt-1.5 pb-2 text-[0.68rem] font-bold uppercase tracking-wide text-subtle">
+                {section.label}
+              </h3>
             )}
-            <ul className="client-sidebar__list">
+            <ul className="m-0 flex list-none flex-col gap-0 p-0">
               {items.map(({ segment, label, end }) => (
                 <li key={segment || 'overview'}>
-                  <NavLink
-                    to={segment ? `${base}/${segment}` : base}
-                    end={end}
-                    className={({ isActive }) =>
-                      `client-sidebar__link${isActive ? ' client-sidebar__link--active' : ''}`
-                    }
-                  >
+                  <NavLink to={segment ? `${base}/${segment}` : base} end={end} className={linkClass}>
                     {label}
                   </NavLink>
                 </li>

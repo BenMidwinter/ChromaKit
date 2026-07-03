@@ -132,6 +132,37 @@ export const orgTemplateInputSchema = z.object({
   is_active: z.boolean().optional(),
 })
 
+const JOURNAL_SOMATIC_STATES = [
+  'Grounded',
+  'Activated',
+  'Fatigued',
+  'Open',
+  'Constricted',
+  'Settled',
+] as const
+
+export const journalEntryInputSchema = z.object({
+  id: z.string().optional(),
+  date: dateString,
+  time: timeString.optional(),
+  somatic_state: z.enum(JOURNAL_SOMATIC_STATES).optional(),
+  body_text: z.string().optional(),
+})
+
+export const clientClinicalDetailsSchema = z.object({
+  diagnosis: optionalText,
+  medication: optionalText,
+  school: optionalText,
+})
+
+export const clinicalProfileInputSchema = z.object({
+  recurring_themes: optionalText,
+  sensory_considerations: optionalText,
+  preferred_modalities_notes: optionalText,
+  clinical_goals: optionalText,
+  working_formulation: optionalText,
+})
+
 /**
  * Parse `data` against `schema`, throwing a single human-readable Error on
  * failure. Existing call sites already surface `err.message`, so validation

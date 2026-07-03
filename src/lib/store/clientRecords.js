@@ -1,7 +1,7 @@
 import { db, uid } from '../data/collections'
 import { canAccessClient, filterClientsForUser } from '../permissions'
 import { sortLatestFirst } from '../dateArchitecture'
-import { parseOrThrow, clientInputSchema } from '../schemas'
+import { parseOrThrow, clientInputSchema, clientClinicalDetailsSchema, clinicalProfileInputSchema } from '../schemas'
 
 export function getOrganisationClients() {
   return [...db.clients]
@@ -53,7 +53,12 @@ export function upsertClient(payload, userId) {
   return created
 }
 
-export function updateClientClinicalDetails(clientId, { diagnosis, medication, school }) {
+export function updateClientClinicalDetails(clientId, details) {
+  const { diagnosis, medication, school } = parseOrThrow(
+    clientClinicalDetailsSchema,
+    details,
+    'Clinical details',
+  )
   const idx = db.clients.findIndex(c => c.id === clientId)
   if (idx === -1) throw new Error('Client not found')
   db.clients[idx] = {
@@ -66,13 +71,14 @@ export function updateClientClinicalDetails(clientId, { diagnosis, medication, s
 }
 
 export function updateClientClinicalProfile(clientId, clinicalProfile) {
+  const parsed = parseOrThrow(clinicalProfileInputSchema, clinicalProfile, 'Clinical profile')
   const idx = db.clients.findIndex(c => c.id === clientId)
   if (idx === -1) throw new Error('Client not found')
   db.clients[idx] = {
     ...db.clients[idx],
     clinical_profile: {
       ...(db.clients[idx].clinical_profile || {}),
-      ...clinicalProfile,
+      ...parsed,
     },
   }
   return { ...db.clients[idx] }

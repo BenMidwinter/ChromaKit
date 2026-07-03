@@ -25,17 +25,28 @@ export default function ClientDetailsBar({ client, onClientUpdated, embedded = f
   }
 
   const bar = (
-    <div className={`client-details-bar${embedded ? '' : ' client-details-bar--card card mb-1'}`}>
-      <div className="client-details-bar__fields">
+    <div
+      className={[
+        'flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3.5 py-2.5',
+        embedded ? '' : 'card mb-1 border-b border-line-light bg-transparent',
+      ].filter(Boolean).join(' ')}
+    >
+      <div className="flex flex-1 flex-wrap items-center gap-x-5 gap-y-1">
         {items.map(item => (
-          <div key={item.label} className="client-details-bar__item">
-            <span className="client-details-bar__label">{item.label}</span>
-            <span className="client-details-bar__value">{item.value}</span>
+          <div key={item.label} className="flex min-w-0 flex-row items-baseline gap-1.5">
+            <span className="whitespace-nowrap text-[0.65rem] font-bold uppercase tracking-wide text-subtle after:content-[':']">
+              {item.label}
+            </span>
+            <span className="text-[0.8125rem] font-semibold text-ink">{item.value}</span>
           </div>
         ))}
       </div>
       {perms.canEditClientDetails && (
-        <button type="button" className="secondary client-details-bar__edit" onClick={() => setShowEdit(true)}>
+        <button
+          type="button"
+          className="secondary shrink-0 self-center"
+          onClick={() => setShowEdit(true)}
+        >
           Edit
         </button>
       )}

@@ -5,6 +5,7 @@ import ClientDetailsBar from './ClientDetailsBar'
 import ClientNav from './ClientNav'
 import ClientClinicalAlerts from './ClientClinicalAlerts'
 import BlurredName from '../../components/BlurredName'
+import ErrorBoundary from '../../components/ErrorBoundary'
 import { usePermissions } from '../../lib/usePermissions'
 import { shouldBlurClientIdentity } from '../../lib/demoPersonas'
 
@@ -36,12 +37,12 @@ export default function PatientProfile({ client: initialClient }) {
 
   return (
     <div className="page page--client">
-      <header className="client-shell__header">
-        <div className="client-shell__identity">
-          <h1>
+      <header className="flex flex-wrap items-stretch border-b-2 border-primary bg-surface">
+        <div className="flex min-w-44 flex-col justify-center gap-0.5 border-r border-line-light bg-gradient-to-br from-primary-light to-surface px-3.5 py-2.5">
+          <h1 className="m-0 text-[1.2rem] leading-tight">
             <BlurredName name={client.real_name} blur={blurNames} />
           </h1>
-          <p className="client-shell__subtitle">
+          <p className="m-0 text-xs text-subtle">
             DOB {client.dob}{assignmentHint}
           </p>
         </div>
@@ -52,7 +53,7 @@ export default function PatientProfile({ client: initialClient }) {
           onClientUpdated={handleClientUpdated}
         />
 
-        <div className="client-shell__actions">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 px-3.5 py-2">
           {perms.canUseBodyMap && (
             <button type="button" className="secondary" onClick={() => setShowBodyMap(true)}>Body map</button>
           )}
@@ -62,14 +63,18 @@ export default function PatientProfile({ client: initialClient }) {
 
       <ClientClinicalAlerts clientId={client.id} />
 
-      <div className="client-layout">
+      <div className="client-layout flex min-h-0 flex-1">
         <ClientNav clientId={client.id} client={client} />
-        <div className="client-layout__main">
+        <div className="client-layout__main min-w-0 flex-1">
           <Outlet context={{ ...parentContext, client }} />
         </div>
       </div>
 
-      {showBodyMap && <BodyMap client={client} onClose={() => setShowBodyMap(false)} />}
+      {showBodyMap && (
+        <ErrorBoundary label="body-map">
+          <BodyMap client={client} onClose={() => setShowBodyMap(false)} />
+        </ErrorBoundary>
+      )}
     </div>
   )
 }

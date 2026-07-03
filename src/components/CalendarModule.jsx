@@ -6,6 +6,8 @@ import {
   useAllAppointmentsQuery,
   useSaveAppointmentMutation,
 } from '../lib/appointmentQueries'
+import PageHeader from './PageHeader'
+import ErrorBoundary from './ErrorBoundary'
 import {
   DEMO_TODAY,
   addDaysYmd,
@@ -910,81 +912,111 @@ export default function CalendarModule({ persona }) {
 
   const paneOpen = Boolean(selectedAppointment || scheduleDraft)
 
+  const calendarToolbarBtn =
+    'border border-line bg-surface px-2.5 py-1.5 text-sm font-medium text-ink hover:bg-zone-muted'
+
   return (
     <div className="calendar-module">
-      <header className="page-header page-header--with-toolbar page-header--calendar">
-        <div className="page-header__text">
-          <h1 className="page-header__title">Calendar</h1>
-        </div>
-        <div className="page-header__toolbar calendar-toolbar">
-          <div className="calendar-toolbar__primary">
-            <button type="button" className="calendar-toolbar__btn calendar-toolbar__btn--add" onClick={openAddAppointment}>
-              + Add Appointment
-            </button>
-            <button type="button" className="calendar-toolbar__btn calendar-toolbar__btn--today" onClick={jumpToday}>
-              Today
-            </button>
-            <div className="calendar-toolbar__nav">
-              <button type="button" className="calendar-toolbar__btn" onClick={() => navigateDate(viewMode === 'month' ? -30 : viewMode === 'day' ? -1 : -7)} aria-label="Previous period">←</button>
-              <button type="button" className="calendar-toolbar__btn" onClick={() => navigateDate(viewMode === 'month' ? 30 : viewMode === 'day' ? 1 : 7)} aria-label="Next period">→</button>
+      <PageHeader
+        className="page-header--calendar mb-2.5 shrink-0 overflow-visible"
+        title="Calendar"
+        toolbar={(
+          <div className="flex w-full flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className={`${calendarToolbarBtn} border-primary bg-primary text-inverse hover:bg-primary-dark`}
+                onClick={openAddAppointment}
+              >
+                + Add Appointment
+              </button>
+              <button type="button" className={calendarToolbarBtn} onClick={jumpToday}>
+                Today
+              </button>
+              <div className="flex items-center gap-0.5">
+                <button
+                  type="button"
+                  className={calendarToolbarBtn}
+                  onClick={() => navigateDate(viewMode === 'month' ? -30 : viewMode === 'day' ? -1 : -7)}
+                  aria-label="Previous period"
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  className={calendarToolbarBtn}
+                  onClick={() => navigateDate(viewMode === 'month' ? 30 : viewMode === 'day' ? 1 : 7)}
+                  aria-label="Next period"
+                >
+                  →
+                </button>
+              </div>
+              <p className="m-0 min-w-0 text-sm font-semibold text-ink">{periodLabel}</p>
             </div>
-            <p className="calendar-toolbar__period">{periodLabel}</p>
+            <div className="ml-auto shrink-0">
+              <CalendarViewOptions
+                prefs={viewPrefs}
+                open={viewOptionsOpen}
+                onToggle={() => setViewOptionsOpen(o => !o)}
+                onClose={() => setViewOptionsOpen(false)}
+                onChange={handleViewPrefsChange}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                calendarOwner={calendarOwner}
+                ownerOptions={ownerOptions}
+                showOwnerPicker={showOwnerPicker}
+                onOwnerChange={setCalendarOwner}
+              />
+            </div>
           </div>
-          <div className="calendar-toolbar__options">
-            <CalendarViewOptions
-              prefs={viewPrefs}
-              open={viewOptionsOpen}
-              onToggle={() => setViewOptionsOpen(o => !o)}
-              onClose={() => setViewOptionsOpen(false)}
-              onChange={handleViewPrefsChange}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              calendarOwner={calendarOwner}
-              ownerOptions={ownerOptions}
-              showOwnerPicker={showOwnerPicker}
-              onOwnerChange={setCalendarOwner}
-            />
-          </div>
-        </div>
-      </header>
+        )}
+      />
 
       <CalendarWorkspaceFrame
         paneOpen={paneOpen}
-        grid={<div className="calendar-module__body">{calendarGrid}</div>}
-        accessory={scheduleDraft?.mode === 'recurring' ? (
-          <RecurringSchedulePanel
-            key={scheduleDraft.source.id}
-            source={scheduleDraft.source}
-            onSave={handleRecurringSave}
-            onCancel={closeSidePane}
-            saving={scheduleSaving}
-          />
-        ) : scheduleDraft ? (
-          <ScheduleSessionPanel
-            key={scheduleDraft.appointment?.id || scheduleDraft.prefill?.id || `${scheduleDraft.mode}-${scheduleDraft.session_date}-${scheduleDraft.start_time}`}
-            sessionDate={scheduleDraft.session_date}
-            startTime={scheduleDraft.start_time}
-            appointment={scheduleDraft.mode === 'edit' ? scheduleDraft.appointment : null}
-            prefill={scheduleDraft.mode === 'book_another' ? scheduleDraft.prefill : null}
-            clients={assignedClients}
-            allAppointments={filtered}
-            clinicianId={session.user.id}
-            showDateField={Boolean(scheduleDraft.manual) || scheduleDraft.mode === 'book_another'}
-            onSave={handleScheduleSave}
-            onCancel={closeSidePane}
-            saving={scheduleSaving}
-          />
-        ) : selectedAppointment ? (
-          <EventDrawer
-            appointment={selectedAppointment}
-            allAppointments={filtered}
-            onClose={closeSidePane}
-            onAttendanceChange={handleAttendanceChange}
-            onEdit={handleEditAppointment}
-            onBookAnother={handleBookAnother}
-            onRecurring={handleRecurring}
-          />
-        ) : null}
+        grid={(
+          <ErrorBoundary label="calendar-grid">
+            <div className="calendar-module__body">{calendarGrid}</div>
+          </ErrorBoundary>
+        )}
+        accessory={(
+          <ErrorBoundary label="calendar-pane">
+            {scheduleDraft?.mode === 'recurring' ? (
+              <RecurringSchedulePanel
+                key={scheduleDraft.source.id}
+                source={scheduleDraft.source}
+                onSave={handleRecurringSave}
+                onCancel={closeSidePane}
+                saving={scheduleSaving}
+              />
+            ) : scheduleDraft ? (
+              <ScheduleSessionPanel
+                key={scheduleDraft.appointment?.id || scheduleDraft.prefill?.id || `${scheduleDraft.mode}-${scheduleDraft.session_date}-${scheduleDraft.start_time}`}
+                sessionDate={scheduleDraft.session_date}
+                startTime={scheduleDraft.start_time}
+                appointment={scheduleDraft.mode === 'edit' ? scheduleDraft.appointment : null}
+                prefill={scheduleDraft.mode === 'book_another' ? scheduleDraft.prefill : null}
+                clients={assignedClients}
+                allAppointments={filtered}
+                clinicianId={session.user.id}
+                showDateField={Boolean(scheduleDraft.manual) || scheduleDraft.mode === 'book_another'}
+                onSave={handleScheduleSave}
+                onCancel={closeSidePane}
+                saving={scheduleSaving}
+              />
+            ) : selectedAppointment ? (
+              <EventDrawer
+                appointment={selectedAppointment}
+                allAppointments={filtered}
+                onClose={closeSidePane}
+                onAttendanceChange={handleAttendanceChange}
+                onEdit={handleEditAppointment}
+                onBookAnother={handleBookAnother}
+                onRecurring={handleRecurring}
+              />
+            ) : null}
+          </ErrorBoundary>
+        )}
       />
     </div>
   )

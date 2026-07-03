@@ -44,9 +44,11 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "tailwindcss": "^4.3.1",
-    "tinyglobby": "^0.2.17",
     "typescript": "^6.0.3",
     "vite": "^6.3.5",
     "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "tinyglobby": "0.2.12"
   }
 }

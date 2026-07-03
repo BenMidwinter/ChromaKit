@@ -1,10 +1,19 @@
 import { useMemo, useState } from 'react'
 
+const thClass = (col) => [
+  'px-3 py-2 text-left text-[0.68rem] font-bold uppercase tracking-wide text-subtle whitespace-nowrap',
+  col.hideOnMobile ? 'hidden md:table-cell' : '',
+  col.className,
+].filter(Boolean).join(' ')
+
+const tdClass = (col) => [
+  'border-b border-line-light px-3 py-2.5 align-middle text-ink',
+  col.hideOnMobile ? 'hidden md:table-cell' : '',
+  col.className,
+].filter(Boolean).join(' ')
+
 /**
  * Universal tabular list for client records, caseload, and org data.
- *
- * @param {{ key: string, label: string, className?: string, hideOnMobile?: boolean, filter?: { type: 'text' | 'select', placeholder?: string, allLabel?: string } }[]} columns
- * @param {{ id: string, cells: Record<string, React.ReactNode>, filterValues?: Record<string, string>, muted?: boolean }[]} rows
  */
 export default function RecordTable({
   columns,
@@ -63,40 +72,34 @@ export default function RecordTable({
     setFilters(prev => ({ ...prev, [key]: value }))
   }
 
+  const filterInputClass =
+    'w-full min-w-0 rounded-sm border border-line bg-surface px-2 py-1.5 text-sm text-ink'
+
   const renderHeader = () => (
     <thead>
-      <tr>
+      <tr className="border-b border-line-strong">
         {columns.map(col => (
-          <th
-            key={col.key}
-            className={col.className || (col.hideOnMobile ? 'record-table__col--hide-mobile' : undefined)}
-          >
+          <th key={col.key} className={thClass(col)}>
             {col.label}
           </th>
         ))}
       </tr>
       {filterableColumns.length > 0 && (
-        <tr className="record-table__filter-row">
+        <tr>
           {columns.map(col => {
             if (!col.filter) {
               return (
-                <th
-                  key={`filter-${col.key}`}
-                  className={col.className || (col.hideOnMobile ? 'record-table__col--hide-mobile' : undefined)}
-                  aria-hidden
-                />
+                <th key={`filter-${col.key}`} className={thClass(col)} aria-hidden />
               )
             }
 
-            const filterClass = col.className || (col.hideOnMobile ? 'record-table__col--hide-mobile' : undefined)
-
             if (col.filter.type === 'select') {
               return (
-                <th key={`filter-${col.key}`} className={filterClass}>
-                  <label className="record-table__filter">
+                <th key={`filter-${col.key}`} className={thClass(col)}>
+                  <label className="block">
                     <span className="sr-only">Filter {col.label}</span>
                     <select
-                      className="record-table__filter-input"
+                      className={filterInputClass}
                       value={filters[col.key] || ''}
                       onChange={e => updateFilter(col.key, e.target.value)}
                       onClick={e => e.stopPropagation()}
@@ -112,12 +115,12 @@ export default function RecordTable({
             }
 
             return (
-              <th key={`filter-${col.key}`} className={filterClass}>
-                <label className="record-table__filter">
+              <th key={`filter-${col.key}`} className={thClass(col)}>
+                <label className="block">
                   <span className="sr-only">Filter {col.label}</span>
                   <input
                     type="search"
-                    className="record-table__filter-input"
+                    className={filterInputClass}
                     value={filters[col.key] || ''}
                     onChange={e => updateFilter(col.key, e.target.value)}
                     placeholder={col.filter.placeholder || 'Filter…'}
@@ -134,12 +137,12 @@ export default function RecordTable({
 
   if (!rows.length) {
     return (
-      <div className={`record-table-wrap ${className}`.trim()}>
-        <table className="record-table">
+      <div className={`w-full overflow-x-auto ${className}`.trim()}>
+        <table className="w-full border-collapse text-sm leading-snug">
           {renderHeader()}
           <tbody>
             <tr>
-              <td colSpan={columns.length} className="record-table__empty">
+              <td colSpan={columns.length} className="px-3 py-8 text-center text-subtle">
                 {emptyMessage}
               </td>
             </tr>
@@ -150,13 +153,13 @@ export default function RecordTable({
   }
 
   return (
-    <div className={`record-table-wrap ${className}`.trim()}>
-      <table className="record-table">
+    <div className={`w-full overflow-x-auto ${className}`.trim()}>
+      <table className="w-full border-collapse text-sm leading-snug">
         {renderHeader()}
         <tbody>
           {!displayRows.length ? (
             <tr>
-              <td colSpan={columns.length} className="record-table__empty">
+              <td colSpan={columns.length} className="px-3 py-8 text-center text-subtle">
                 {displayEmptyMessage}
               </td>
             </tr>
@@ -167,9 +170,10 @@ export default function RecordTable({
               <tr
                 key={row.id}
                 className={[
-                  clickable ? 'record-table__row--clickable' : '',
-                  selected ? 'record-table__row--selected' : '',
-                  row.muted ? 'record-table__row--muted' : '',
+                  'even:bg-zone-muted',
+                  clickable ? 'cursor-pointer hover:bg-zone-accent' : '',
+                  selected ? 'bg-primary/10' : '',
+                  row.muted ? 'opacity-60' : '',
                 ].filter(Boolean).join(' ') || undefined}
                 onClick={clickable ? () => onRowClick(row) : undefined}
                 tabIndex={clickable ? 0 : undefined}
@@ -181,10 +185,7 @@ export default function RecordTable({
                 } : undefined}
               >
                 {columns.map(col => (
-                  <td
-                    key={col.key}
-                    className={col.className || (col.hideOnMobile ? 'record-table__col--hide-mobile' : undefined)}
-                  >
+                  <td key={col.key} className={tdClass(col)}>
                     {row.cells[col.key]}
                   </td>
                 ))}
