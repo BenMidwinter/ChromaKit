@@ -253,8 +253,14 @@
     flex: 1 1 100%;
   }
 
-  .progress-notes-page .doc-editor__prose,
-  .progress-notes-page .doc-editor .ProseMirror {
+  .progress-notes-page .doc-editor--immersive .doc-editor__prose,
+  .progress-notes-page .doc-editor--immersive .ProseMirror {
+    padding: 0;
+    min-height: 50vh;
+  }
+
+  .progress-notes-page .doc-editor:not(.doc-editor--immersive) .doc-editor__prose,
+  .progress-notes-page .doc-editor:not(.doc-editor--immersive) .doc-editor .ProseMirror {
     padding: 1.25rem var(--space-inline) 2rem;
     min-height: 50vh;
   }
@@ -318,6 +324,50 @@
   background: var(--col-primary-light);
 }
 
+.doc-editor__menu--signature .doc-editor__menu-list--signature {
+  min-width: 15rem;
+}
+
+.signature-pad {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 40;
+  width: min(100vw - 2rem, 28rem);
+  padding: 0.75rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.signature-pad__label {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--txt-muted);
+}
+
+.signature-pad__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.signature-pad__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+}
+
 .doc-editor__link {
   color: var(--col-primary-dark);
   text-decoration: underline;
@@ -363,12 +413,35 @@
   margin-top: 1.5rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--border-light);
-  font-style: italic;
   color: var(--col-accent);
 }
 
 .doc-editor .ProseMirror .doc-signature__line {
   line-height: 1.5;
+}
+
+.doc-editor .ProseMirror .doc-signature__legacy {
+  font-style: italic;
+}
+
+.doc-editor .ProseMirror .doc-signature__image {
+  display: block;
+  max-height: 3.5rem;
+  max-width: 14rem;
+  object-fit: contain;
+  margin-bottom: 0.35rem;
+}
+
+.doc-editor .ProseMirror .doc-signature__script {
+  font-family: 'Caveat', cursive;
+  font-size: 1.85rem;
+  line-height: 1.15;
+  color: var(--col-accent);
+  margin-bottom: 0.2rem;
+}
+
+.doc-editor .ProseMirror .doc-signature__name {
+  font-weight: 600;
 }
 
 .doc-editor .ProseMirror table {

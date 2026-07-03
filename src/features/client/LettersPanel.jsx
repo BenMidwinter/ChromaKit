@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import RichTextEditor from '../../components/RichTextEditor'
 import { useClientSession } from '../../lib/useClientSession'
 import { getLetters, saveLetter, getProfile } from '../../lib/store'
+import { downloadLetterPdf } from '../../lib/clinicalExport'
+import { getClinicalExportBranding } from '../../lib/workplaceBranding'
 import RecordListLayout from '../../components/RecordListLayout'
 import RecordTable from '../../components/RecordTable'
 import { useToast } from '../../components/ui'
@@ -24,7 +26,7 @@ const LETTER_COLUMNS = [
 ]
 
 export default function LettersPanel() {
-  const { clientId, session } = useClientSession()
+  const { clientId, session, client } = useClientSession()
   const [letters, setLetters] = useState(() => getLetters(clientId))
   const [selectedId, setSelectedId] = useState(null)
   const [title, setTitle] = useState('')
@@ -85,6 +87,29 @@ export default function LettersPanel() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleDownload = () => {
+    const branding = getClinicalExportBranding(client?.workplace_id, session?.user?.id)
+    const author = session?.user?.id ? getProfile(session.user.id) : null
+    const opened = downloadLetterPdf(
+      {
+        title: title.trim() || 'Untitled letter',
+        content,
+        recipient,
+        letter_date: letterDate,
+      },
+      {
+        clientName: client?.real_name,
+        authorName: author?.full_name,
+        branding,
+      },
+    )
+    if (!opened) {
+      toast.error('Could not open the print dialog. Please try again.')
+      return
+    }
+    toast.info('Choose “Save as PDF” in the print dialog.')
   }
 
   const rows = letters.map(letter => ({
@@ -155,6 +180,7 @@ export default function LettersPanel() {
       onNew={editing ? undefined : handleNew}
       headerActions={editing ? (
         <>
+          <button type="button" className="secondary" onClick={handleDownload}>Download</button>
           <button type="button" className="secondary" onClick={handleCancel}>Cancel</button>
           <button type="button" className="primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save letter'}

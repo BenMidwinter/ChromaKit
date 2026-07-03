@@ -328,6 +328,35 @@
   border-left: 4px solid #8b7cb8;
 }
 
+.role-block--workplace_information {
+  border-left: 4px solid var(--col-primary);
+}
+
+.role-block--profile_identity {
+  border-left: 4px solid var(--col-primary);
+}
+
+.role-block--profile_workplace {
+  border-left: 4px solid #8b7cb8;
+}
+
+.role-block--profile_availability {
+  border-left: 4px solid #4a7c9e;
+}
+
+.role-block--profile_letterhead {
+  border-left: 4px solid #5c8a72;
+}
+
+.role-block--profile_journal {
+  border-left: 4px solid #c47a3a;
+}
+
+.role-block--profile_journal .role-block__badge {
+  color: #6b4423;
+  background: #f5e8dc;
+}
+
 .role-block--clinical_lead {
   border-left: 4px solid var(--col-accent);
 }
@@ -1058,6 +1087,9 @@ button.calendar-event {
   min-height: 1.05rem;
   box-shadow: var(--shadow-sm);
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
 }
 
 .calendar-event--block .calendar-event__time {
@@ -1109,6 +1141,32 @@ button.calendar-event {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.calendar-event__info {
+  display: block;
+  font-size: 0.6rem;
+  line-height: 1.2;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  min-width: 0;
+  width: 100%;
+  opacity: 0.92;
+}
+
+.calendar-event--has-info .calendar-event__therapist {
+  display: none;
+}
+
+.calendar-event--compact .calendar-event__info {
+  font-size: 0.58rem;
+}
+
+.calendar-event--cancelled .calendar-event__info {
+  text-decoration: line-through;
 }
 
 /* Month grid */

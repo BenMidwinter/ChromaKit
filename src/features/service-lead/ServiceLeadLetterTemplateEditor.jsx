@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams, useOutletContext } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useAppSession } from '../../lib/AppSessionContext'
 import RichTextEditor from '../../components/RichTextEditor'
 import { getProfile } from '../../lib/store'
 import { buildDemoTemplateMergeContext } from '../../lib/demoPersonas'
@@ -16,7 +17,7 @@ const DEMO_MERGE_CONTEXT = buildDemoTemplateMergeContext()
 export default function ServiceLeadLetterTemplateEditor() {
   const { templateId } = useParams()
   const navigate = useNavigate()
-  const { session } = useOutletContext()
+  const { session } = useAppSession()
   const toast = useToast()
   const isNew = templateId === 'new'
 

@@ -9,6 +9,8 @@ export interface AppointmentLike {
   appointment_type?: string
   attendance_status?: string | null
   location?: string
+  other_info?: string
+  notes?: string
 }
 
 export function appointmentSchedule(appt: AppointmentLike | null | undefined) {
@@ -117,6 +119,12 @@ export function attendanceBadgeClass(status: string | null | undefined): string 
   return 'badge-blue'
 }
 
+export function appointmentOtherInfo(appt: { other_info?: string; notes?: string } | null | undefined): string {
+  const raw = appt?.other_info ?? appt?.notes ?? ''
+  if (!raw) return ''
+  return String(raw).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
 function parseTimeMinutes(time: string | null | undefined): number {
   if (!time) return 0
   const [h, m] = String(time).split(':').map(Number)
@@ -144,9 +152,9 @@ export function groupAppointmentsForAgenda(appointments: AppointmentLike[]) {
   const today = DEMO_TODAY
   const tomorrow = addDaysYmd(today, 1)
 
-  const todayItems = []
-  const tomorrowItems = []
-  const laterItems = []
+  const todayItems: AppointmentLike[] = []
+  const tomorrowItems: AppointmentLike[] = []
+  const laterItems: AppointmentLike[] = []
 
   for (const appt of appointments) {
     const { session_date } = appointmentSchedule(appt)

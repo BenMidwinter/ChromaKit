@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { useOutletContext } from 'react-router-dom'
+import { useAppSession } from '../../lib/AppSessionContext'
 import { getClientsForUser } from '../../lib/store'
 import {
   useAllAppointmentsQuery,
@@ -22,6 +22,7 @@ import {
   filterAppointmentsForPersona,
   appointmentsForDate,
 } from '../../lib/calendarAccess'
+import { appointmentOtherInfo } from '../../lib/appointmentUtils'
 import {
   getCalendarViewPreferences,
   saveCalendarViewPreferences,
@@ -144,6 +145,7 @@ function EventChip({ appointment, compact = false, blurNames = false, onSelect, 
   const timeRange = appointment.end_time
     ? `${appointment.start_time}–${appointment.end_time}`
     : appointment.start_time
+  const otherInfo = appointmentOtherInfo(appointment)
 
   const className = [
     'calendar-event',
@@ -151,13 +153,14 @@ function EventChip({ appointment, compact = false, blurNames = false, onSelect, 
     'calendar-event--block',
     'calendar-event--service',
     compact && 'calendar-event--compact',
+    otherInfo && 'calendar-event--has-info',
     selected && 'calendar-event--selected',
     cancelled && 'calendar-event--cancelled',
   ].filter(Boolean).join(' ')
 
   const title = blurNames
-    ? `${modalityLabel(appointment.therapy_modality)} · ${timeRange}${cancelled ? ' · cancelled' : ''}`
-    : `${appointment.client_name} · ${modalityLabel(appointment.therapy_modality)} · ${timeRange}${cancelled ? ' · cancelled' : ''}`
+    ? `${modalityLabel(appointment.therapy_modality)} · ${timeRange}${otherInfo ? ` · ${otherInfo}` : ''}${cancelled ? ' · cancelled' : ''}`
+    : `${appointment.client_name} · ${modalityLabel(appointment.therapy_modality)} · ${timeRange}${otherInfo ? ` · ${otherInfo}` : ''}${cancelled ? ' · cancelled' : ''}`
 
   return (
     <button
@@ -175,7 +178,10 @@ function EventChip({ appointment, compact = false, blurNames = false, onSelect, 
       {!compact && (
         <span className="calendar-event__meta">{modalityLabel(appointment.therapy_modality)}</span>
       )}
-      {!compact && (
+      {otherInfo && (
+        <span className="calendar-event__info">{otherInfo}</span>
+      )}
+      {!compact && !otherInfo && (
         <BlurredName as="span" name={appointment.assigned_therapist} blur={blurNames} className="calendar-event__therapist" />
       )}
     </button>
@@ -656,7 +662,7 @@ function DayView({
 }
 
 export default function CalendarModule({ persona }) {
-  const { myWorkplace, session } = useOutletContext()
+  const { myWorkplace, session } = useAppSession()
   const [viewMode, setViewMode] = useState('working-week')
   const [activeDate, setActiveDate] = useState(DEMO_TODAY)
   const [selectedAppointment, setSelectedAppointment] = useState(null)
@@ -786,7 +792,7 @@ export default function CalendarModule({ persona }) {
             ...payload,
             session_date: date,
             dates: undefined,
-            clinician_id: session.user.id,
+            clinician_id: payload.clinician_id || session.user.id,
           },
           userId: session.user.id,
         })
@@ -816,8 +822,9 @@ export default function CalendarModule({ persona }) {
             duration_minutes: payload.duration_minutes,
             therapy_modality: payload.therapy_modality,
             location: payload.location,
+            other_info: payload.other_info,
             appointment_type: payload.appointment_type,
-            clinician_id: session.user.id,
+            clinician_id: payload.clinician_id || session.user.id,
           },
           userId: session.user.id,
         })
@@ -975,7 +982,9 @@ export default function CalendarModule({ persona }) {
                 prefill={scheduleDraft.mode === 'book_another' ? scheduleDraft.prefill : null}
                 clients={assignedClients}
                 allAppointments={filtered}
-                clinicianId={session.user.id}
+                sessionUserId={session.user.id}
+                myWorkplace={myWorkplace}
+                calendarOwner={calendarOwner}
                 showDateField={Boolean(scheduleDraft.manual) || scheduleDraft.mode === 'book_another'}
                 onSave={handleScheduleSave}
                 onCancel={closeSidePane}

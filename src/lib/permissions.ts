@@ -27,6 +27,7 @@ export interface WorkplaceContext {
 }
 
 export interface Client {
+  id?: string
   workplace_id?: string | null
   user_id?: string
 }
@@ -202,7 +203,8 @@ export function canAssignAppointmentClinician(
   client?: Client | null,
 ): boolean {
   if (!client?.workplace_id) return false
-  return getEffectiveRole(workplaceContext) === ROLES.ADMINISTRATOR
+  const role = getEffectiveRole(workplaceContext)
+  return role === ROLES.ADMINISTRATOR || role === ROLES.CLINICAL_LEAD
 }
 
 export function canManageAppointments(

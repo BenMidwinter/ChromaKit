@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { useOutletContext } from 'react-router-dom'
+import { useAppSession } from '../../lib/AppSessionContext'
 import { canAccessClientNavSection } from '../../lib/permissions'
 
 const NAV_SECTIONS = [
@@ -39,7 +39,7 @@ const linkClass = ({ isActive }) => [
 
 export default function ClientNav({ clientId, client }) {
   const base = `/clients/${clientId}`
-  const { session, myWorkplace } = useOutletContext()
+  const { session, myWorkplace } = useAppSession()
   const userId = session?.user?.id
 
   const isVisible = (section) => {

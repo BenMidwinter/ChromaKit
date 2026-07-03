@@ -24,23 +24,50 @@ import {
   IconTable,
   IconHorizontalRule,
   IconFillLine,
-  IconSign,
   IconFormat,
   IconMic,
   IconAudioWave,
   IconHeading,
 } from './EditorToolbarIcons'
+import SignatureMenu from './SignatureMenu'
 import ErrorBoundary from './ErrorBoundary'
 
+/** Chrome layout — theme editor tokens keep toolbar/canvas legible across themes. */
+const EDITOR_ROOT =
+  'doc-editor flex flex-col flex-1 min-h-0 overflow-hidden rounded-md border border-line bg-editor-chrome'
+const EDITOR_TOOLBAR =
+  'doc-editor__toolbar flex flex-wrap items-center gap-1 overflow-visible border-b border-line-light bg-editor-chrome px-3 py-1.5 sticky top-0 z-[5]'
+const EDITOR_TOOLBAR_GROUP = 'doc-editor__toolbar-group flex items-center gap-0.5'
+const EDITOR_BTN =
+  'doc-editor__btn inline-flex min-h-[1.85rem] min-w-[1.85rem] items-center justify-center rounded border-0 bg-transparent px-1.5 text-[0.82rem] text-accent transition-colors hover:enabled:bg-primary/15 disabled:cursor-default disabled:opacity-35'
+const EDITOR_BTN_ACTIVE = 'doc-editor__btn--active bg-primary/25 text-primary-dark'
+const EDITOR_BTN_WIDE = 'doc-editor__btn--wide min-w-auto px-2 text-[0.78rem] font-semibold'
+const EDITOR_DIVIDER = 'doc-editor__divider mx-1.5 h-[1.35rem] w-px bg-line'
+const EDITOR_CANVAS =
+  'doc-editor__canvas relative min-h-[480px] flex-1 overflow-y-auto bg-editor-canvas px-4 pt-6 pb-10'
+const EDITOR_PAGE =
+  'doc-editor__page mx-auto min-h-[640px] max-w-[min(100%,210mm)] rounded-sm border border-line-light bg-editor-sheet shadow-md'
+const EDITOR_PAGE_SKELETON = 'doc-editor__page doc-editor__page--skeleton'
+
+/** Full-width module — toolbar + writing surface, no nested paper/canvas chrome. */
+const EDITOR_ROOT_IMMERSIVE =
+  'doc-editor doc-editor--immersive flex w-full min-h-0 flex-1 flex-col overflow-hidden border-0 rounded-none bg-editor-sheet'
+const EDITOR_TOOLBAR_IMMERSIVE =
+  'doc-editor__toolbar flex w-full flex-wrap items-center gap-1 border-b border-line-light bg-editor-chrome px-[var(--space-inline)] py-1.5 sticky top-0 z-[5]'
+const EDITOR_CANVAS_IMMERSIVE =
+  'doc-editor__canvas relative min-h-0 flex-1 overflow-y-auto bg-editor-sheet'
+const EDITOR_WRITE_IMMERSIVE =
+  'doc-editor__write mx-auto w-full max-w-[min(100%,210mm)] px-[var(--space-inline)] py-8'
+
 function ToolbarDivider() {
-  return <span className="doc-editor__divider" aria-hidden />
+  return <span className={EDITOR_DIVIDER} aria-hidden />
 }
 
 function ToolbarButton({ onClick, active, disabled, children, title, wide, className = '' }) {
   return (
     <button
       type="button"
-      className={`doc-editor__btn${active ? ' doc-editor__btn--active' : ''}${wide ? ' doc-editor__btn--wide' : ''}${className ? ` ${className}` : ''}`}
+      className={`${EDITOR_BTN}${active ? ` ${EDITOR_BTN_ACTIVE}` : ''}${wide ? ` ${EDITOR_BTN_WIDE}` : ''}${className ? ` ${className}` : ''}`}
       onClick={onClick}
       disabled={disabled}
       title={title}
@@ -293,6 +320,7 @@ function DocToolbar({
   onToggleDictate,
   onAddAudioFragment,
   onAddArtwork,
+  toolbarClassName = EDITOR_TOOLBAR,
 }) {
   const prompt = usePrompt()
   const toolbar = useEditorState({
@@ -343,8 +371,8 @@ function DocToolbar({
   const isClinical = mode === 'clinical'
 
   return (
-    <div className="doc-editor__toolbar" role="toolbar" aria-label="Formatting">
-      <div className="doc-editor__toolbar-group">
+    <div className={toolbarClassName} role="toolbar" aria-label="Formatting">
+      <div className={EDITOR_TOOLBAR_GROUP}>
         <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!toolbar.canUndo} title="Undo">
           <IconUndo />
         </ToolbarButton>
@@ -353,7 +381,7 @@ function DocToolbar({
         </ToolbarButton>
       </div>
       <ToolbarDivider />
-      <div className="doc-editor__toolbar-group">
+      <div className={EDITOR_TOOLBAR_GROUP}>
         <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={toolbar.isH1} title="Title">
           <IconHeading level={1} />
         </ToolbarButton>
@@ -365,7 +393,7 @@ function DocToolbar({
         </ToolbarButton>
       </div>
       <ToolbarDivider />
-      <div className="doc-editor__toolbar-group">
+      <div className={EDITOR_TOOLBAR_GROUP}>
         <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={toolbar.isBold} title="Bold">
           <IconBold />
         </ToolbarButton>
@@ -379,7 +407,7 @@ function DocToolbar({
       <ToolbarDivider />
       <FormatMenu editor={editor} />
       <ToolbarDivider />
-      <div className="doc-editor__toolbar-group">
+      <div className={EDITOR_TOOLBAR_GROUP}>
         <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={toolbar.isBullet} title="Bullet list">
           <IconBulletList />
         </ToolbarButton>
@@ -397,7 +425,7 @@ function DocToolbar({
       {isClinical && (
         <>
           <ToolbarDivider />
-          <div className="doc-editor__toolbar-group">
+          <div className={EDITOR_TOOLBAR_GROUP}>
             <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal line">
               <IconHorizontalRule />
             </ToolbarButton>
@@ -417,12 +445,7 @@ function DocToolbar({
               <IconTable />
             </ToolbarButton>
             <MergeFieldMenu editor={editor} />
-            <ToolbarButton
-              onClick={() => editor.chain().focus().insertSignature().run()}
-              title={clinicianProfile?.full_name ? `Insert signature (${clinicianProfile.full_name})` : 'Insert signature from profile'}
-            >
-              <IconSign />
-            </ToolbarButton>
+            <SignatureMenu editor={editor} clinicianProfile={clinicianProfile} />
           </div>
         </>
       )}
@@ -430,7 +453,7 @@ function DocToolbar({
       {!isClinical && (
         <>
           <ToolbarDivider />
-          <div className="doc-editor__toolbar-group">
+          <div className={EDITOR_TOOLBAR_GROUP}>
             <ToolbarButton onClick={addLink} active={toolbar.isLink} title="Link">
               <IconLink />
             </ToolbarButton>
@@ -453,11 +476,13 @@ function RichTextEditorSurface({
   onChange,
   editable = true,
   variant = 'default',
+  layout = 'document',
   mode = 'basic',
   mergeContext = null,
   clinicianProfile = null,
   onEditorReady = null,
 }) {
+  const immersive = layout === 'immersive'
   const [surfaceReady, setSurfaceReady] = useState(false)
   const [isDictating, setIsDictating] = useState(false)
   const [slashOpen, setSlashOpen] = useState(false)
@@ -676,17 +701,52 @@ function RichTextEditorSurface({
   const handleAddArtwork = () => pickArtworkFile(editor)
 
   if (!editor || editor.isDestroyed || !surfaceReady) {
+    if (immersive) {
+      return (
+        <div className={`${EDITOR_ROOT_IMMERSIVE} doc-editor--loading doc-editor--${variant}`}>
+          <div className={EDITOR_CANVAS_IMMERSIVE}>
+            <div className={`${EDITOR_WRITE_IMMERSIVE} min-h-[50vh] animate-pulse bg-editor-canvas/40`} />
+          </div>
+        </div>
+      )
+    }
     return (
-      <div className={`doc-editor doc-editor--loading doc-editor--${variant}`}>
-        <div className="doc-editor__canvas">
-          <div className="doc-editor__page doc-editor__page--skeleton" />
+      <div className={`${EDITOR_ROOT} doc-editor--loading doc-editor--${variant}`}>
+        <div className={EDITOR_CANVAS}>
+          <div className={EDITOR_PAGE_SKELETON} />
         </div>
       </div>
     )
   }
 
+  const rootClass = immersive
+    ? [
+        EDITOR_ROOT_IMMERSIVE,
+        `doc-editor--${variant}`,
+        !editable ? 'doc-editor--readonly' : '',
+        mode === 'clinical' ? 'doc-editor--clinical' : '',
+        isDictating ? 'doc-editor--dictating' : '',
+      ].filter(Boolean).join(' ')
+    : [
+        EDITOR_ROOT,
+        `doc-editor--${variant}`,
+        !editable ? 'doc-editor--readonly' : '',
+        mode === 'clinical' ? 'doc-editor--clinical' : '',
+        isDictating ? 'doc-editor--dictating' : '',
+      ].filter(Boolean).join(' ')
+
+  const canvasClass = immersive
+    ? EDITOR_CANVAS_IMMERSIVE
+    : [EDITOR_CANVAS, !editable ? 'bg-page' : ''].filter(Boolean).join(' ')
+
+  const pageClass = [
+    EDITOR_PAGE,
+    variant === 'a4' ? 'w-[210mm] max-w-[min(210mm,100%)] min-h-[297mm]' : '',
+    !editable ? 'shadow-none' : '',
+  ].filter(Boolean).join(' ')
+
   return (
-    <div className={`doc-editor doc-editor--${variant}${!editable ? ' doc-editor--readonly' : ''}${mode === 'clinical' ? ' doc-editor--clinical' : ''}${isDictating ? ' doc-editor--dictating' : ''}`}>
+    <div className={rootClass}>
       {editable && editor && !editor.isDestroyed && (
         <DocToolbar
           editor={editor}
@@ -696,9 +756,10 @@ function RichTextEditorSurface({
           onToggleDictate={handleToggleDictate}
           onAddAudioFragment={handleAddAudioFragment}
           onAddArtwork={handleAddArtwork}
+          toolbarClassName={immersive ? EDITOR_TOOLBAR_IMMERSIVE : EDITOR_TOOLBAR}
         />
       )}
-      <div className="doc-editor__canvas" ref={canvasRef}>
+      <div className={canvasClass} ref={canvasRef}>
         <SlashCommandPalette
           open={slashOpen}
           query={slashQuery}
@@ -707,9 +768,15 @@ function RichTextEditorSurface({
           onPick={(cmd) => executeSlash(cmd, editor)}
           onHover={setSlashIndex}
         />
-        <div className="doc-editor__page">
-          <EditorContent editor={editor} />
-        </div>
+        {immersive ? (
+          <div className={EDITOR_WRITE_IMMERSIVE}>
+            <EditorContent editor={editor} />
+          </div>
+        ) : (
+          <div className={pageClass}>
+            <EditorContent editor={editor} />
+          </div>
+        )}
       </div>
     </div>
   )

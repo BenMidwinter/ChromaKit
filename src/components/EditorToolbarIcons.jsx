@@ -8,8 +8,8 @@ export function IconUndo() {
 
 export function IconRedo() {
   return (
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden focusable="false">
-      <path fill="currentColor" d="M18.92 6.01C17.11 4.31 14.71 3.27 12.06 3.27c-2.46 0-4.68.68-6.5 2.5L3 7v9h9l-2.79-2.79A7.93 7.93 0 0 1 12.06 10c2.21 0 4.21.9 5.65 2.35L19 10.5c-1.82-1.82-4.04-2.49-6.08-2.49z" />
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden focusable="false" style={{ transform: 'scaleX(-1)' }}>
+      <path fill="currentColor" d="M12.5 8c-2.65 0-5.05 1.04-6.85 2.74L3 7v9h9l-2.79-2.79A7.93 7.93 0 0 1 12.5 10c2.21 0 4.21.9 5.65 2.35L19 10.5C17.18 8.68 14.96 8 12.5 8z" />
     </svg>
   )
 }

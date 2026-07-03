@@ -5,6 +5,7 @@ import {
   orgTemplateInputSchema,
   parseOrThrow,
   workplaceInputSchema,
+  workplaceBrandingUpdateSchema,
 } from './schemas'
 
 describe('org mutation schemas', () => {
@@ -40,5 +41,10 @@ describe('org mutation schemas', () => {
       content: '<p></p>',
     }, 'Template')
     expect(parsed.name).toBe('Session note')
+  })
+
+  it('requires address line 1 for workplace branding', () => {
+    expect(() => parseOrThrow(workplaceBrandingUpdateSchema, { address_line1: '' }, 'Workplace branding'))
+      .toThrow(/Address line 1/)
   })
 })

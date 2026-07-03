@@ -1,7 +1,8 @@
-import { Routes, Route, Navigate, useNavigate, useParams, useOutletContext, Outlet, useSearchParams } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams, Outlet, useSearchParams } from 'react-router-dom'
+import { useAppClients } from './lib/queries'
 
 import AppLayout from './components/AppLayout'
-import Home from './components/Home'
+import Home from './features/home/HomePage'
 import Calendar from './features/calendar/CalendarPage'
 import ActiveCases from './components/ActiveCases'
 import AllClients from './components/AllClients'
@@ -17,11 +18,11 @@ import UpcomingAppointments from './components/UpcomingAppointments'
 import ClientAppointmentsIndex from './features/client/ClientAppointmentsIndex'
 import AppointmentEditor from './features/client/AppointmentEditor'
 import ClientSectionPlaceholder from './features/client/ClientSectionPlaceholder'
-import Workplace from './components/Workplace'
-import WorkplaceTeamMember from './components/WorkplaceTeamMember'
-import ProfileLayout from './components/profile/ProfileLayout'
-import ProfileDetails from './components/profile/ProfileDetails'
-import ClinicianJournal from './components/profile/ClinicianJournal'
+import WorkplacePage from './features/workplace/WorkplacePage'
+import WorkplaceTeamMember from './features/workplace/WorkplaceTeamMember'
+import ProfileLayout from './features/profile/ProfileLayout'
+import ProfileDetails from './features/profile/ProfileDetails'
+import ClinicianJournal from './features/profile/ClinicianJournal'
 import Resources from './components/Resources'
 import About from './components/About'
 import ServiceLeadLayout from './features/service-lead/ServiceLeadLayout'
@@ -128,7 +129,7 @@ export default function App() {
           } />
         </Route>
 
-        <Route path="workplace" element={<WorkplaceWrapper />} />
+        <Route path="workplace" element={<WorkplacePage />} />
         <Route path="workplace/team/:userId" element={<WorkplaceTeamMember />} />
 
         <Route path="service-lead" element={<ServiceLeadLayout />}>
@@ -158,8 +159,8 @@ export default function App() {
 
 function ProgressNotesClientShell() {
   const { clientId } = useParams()
-  const parentContext = useOutletContext()
-  const client = parentContext.clients?.find(c => c.id === clientId)
+  const { clients } = useAppClients()
+  const client = clients?.find(c => c.id === clientId)
   if (!client) {
     return (
       <div className="page">
@@ -167,12 +168,12 @@ function ProgressNotesClientShell() {
       </div>
     )
   }
-  return <Outlet context={{ ...parentContext, client }} />
+  return <Outlet context={{ client }} />
 }
 
 function PatientProfileWrapper() {
   const { id } = useParams()
-  const { clients } = useOutletContext()
+  const { clients } = useAppClients()
   const client = clients.find(c => c.id === id)
   if (!client) return <div className="card empty-state">Client not found or access denied.</div>
   return <PatientProfile client={client} />
@@ -190,8 +191,4 @@ function LegacyNoteRedirect() {
     return <Navigate to={`/clients/${id}/progress-notes/${suffix}`} replace />
   }
   return <Navigate to={`/clients/${id}/progress-notes/new`} replace />
-}
-
-function WorkplaceWrapper() {
-  return <Workplace />
 }

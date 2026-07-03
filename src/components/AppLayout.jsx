@@ -2,12 +2,13 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { CLINICIAN_PROFILES } from '../lib/mockData'
 import { getMyWorkplace } from '../lib/store'
-import { useClientsQuery, useWorkplaceContextsQuery, useStoreRefreshers } from '../lib/queries'
+import { useWorkplaceContextsQuery, useStoreRefreshers } from '../lib/queries'
 import { ROLES, workplaceRoleForDemo } from '../lib/permissions'
 import { DEFAULT_PERSONA_ID, getPersonaById } from '../lib/demoPersonas'
 import DemoProfileSwitcher from './DemoProfileSwitcher'
 import ThemeToggle from './ThemeToggle'
 import { RouteErrorBoundary } from './ErrorBoundary'
+import { AppSessionProvider } from '../lib/AppSessionContext'
 
 const NAV_ITEMS = [
   { to: '/home', label: 'Home', end: true },
@@ -107,17 +108,32 @@ export default function AppLayout() {
     }
   }, [demoRole, navigate])
 
-  const clientsQuery = useClientsQuery({
-    userId: session.user.id,
-    demoRole,
-    activeWorkplaceId,
-    myWorkplace,
-  })
-  const clients = useMemo(() => clientsQuery.data ?? [], [clientsQuery.data])
-
   useEffect(() => { setMenuOpen(false) }, [location.pathname])
 
   const isProgressNotes = location.pathname.includes('/progress-notes')
+
+  const appSession = useMemo(() => ({
+    session,
+    activePersona,
+    personaId,
+    demoRole,
+    myWorkplace,
+    myWorkplaces,
+    activeWorkplaceId,
+    setActiveWorkplaceId,
+    refreshClients,
+    refreshMemberships,
+  }), [
+    session,
+    activePersona,
+    personaId,
+    demoRole,
+    myWorkplace,
+    myWorkplaces,
+    activeWorkplaceId,
+    refreshClients,
+    refreshMemberships,
+  ])
 
   return (
     <div className="app-shell">
@@ -175,19 +191,9 @@ export default function AppLayout() {
 
       <main className={`main-content${isProgressNotes ? ' main-content--progress-notes' : ''}`}>
         <RouteErrorBoundary>
-          <Outlet context={{
-            clients,
-            session,
-            myWorkplace,
-            myWorkplaces,
-            activeWorkplaceId,
-            setActiveWorkplaceId,
-            demoRole,
-            activePersona,
-            personaId,
-            refreshClients,
-            refreshMemberships,
-          }} />
+          <AppSessionProvider value={appSession}>
+            <Outlet />
+          </AppSessionProvider>
         </RouteErrorBoundary>
       </main>
     </div>

@@ -457,18 +457,9 @@ select.paper-input {
   color: var(--col-accent);
 }
 
-/* --- Document editor (Google Docs–style) --- */
-
-.doc-editor {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--editor-chrome-bg);
-  border: 1px solid var(--border-color);
-}
+/* --- Document editor (Google Docs–style) ---
+   Chrome layout lives in RichTextEditor (Tailwind + editor theme tokens).
+   ProseMirror content styles stay here for legibility across themes. */
 
 .doc-editor--loading .doc-editor__page--skeleton {
   min-height: 640px;
@@ -487,102 +478,24 @@ select.paper-input {
   100% { background-position: -200% 0; }
 }
 
-.doc-editor__toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.45rem 0.75rem;
-  background: var(--editor-chrome-bg);
-  border-bottom: 1px solid var(--border-light);
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  overflow: visible;
-}
-
-.doc-editor__toolbar-group {
-  display: flex;
-  align-items: center;
-  gap: 0.15rem;
-}
-
-.doc-editor__divider {
-  width: 1px;
-  height: 1.35rem;
-  background: var(--border-color);
-  margin: 0 0.35rem;
-}
-
-.doc-editor__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.85rem;
-  height: 1.85rem;
-  padding: 0 0.4rem;
-  font-size: 0.82rem;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--col-accent);
-  cursor: pointer;
-  transition: background 0.12s;
-}
-
-.doc-editor__btn--wide {
-  min-width: auto;
-  padding: 0 0.55rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.doc-editor__btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--col-primary) 18%, transparent);
-}
-
-.doc-editor__btn--active {
-  background: color-mix(in srgb, var(--col-primary) 28%, transparent);
-  color: var(--col-primary-dark);
-}
-
-.doc-editor__btn:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.doc-editor__underline {
-  text-decoration: underline;
-}
-
-.doc-editor__canvas {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.5rem 1rem 2.5rem;
-  min-height: 480px;
-  background: var(--editor-canvas-bg);
-  position: relative;
-}
-
-.doc-editor__page {
-  max-width: var(--paper-width-letter);
-  margin: 0 auto;
-  min-height: 640px;
-  background: var(--editor-sheet-bg);
-  box-shadow: var(--elevation-paper-2);
-  border-radius: 2px;
-  border: 1px solid var(--border-light);
-}
-
-.doc-editor--a4 .doc-editor__page {
-  width: 210mm;
-  max-width: min(210mm, 100%);
-  min-height: 297mm;
-}
-
 .doc-editor--a4 .doc-editor__prose,
 .doc-editor--a4 .doc-editor .ProseMirror {
   min-height: calc(297mm - 168px);
+}
+
+/* Immersive layout — single module, no nested sheet/canvas boxes */
+.doc-editor--immersive .doc-editor__write {
+  min-height: 100%;
+}
+
+.doc-editor--immersive .doc-editor__prose,
+.doc-editor--immersive .ProseMirror {
+  min-height: 12rem;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 11pt;
+  line-height: 1.75;
+  color: var(--editor-prose-color);
 }
 
 .doc-editor__prose,
@@ -636,15 +549,6 @@ select.paper-input {
   float: left;
   height: 0;
   pointer-events: none;
-}
-
-.doc-editor--readonly .doc-editor__canvas {
-  background: var(--bg-page);
-}
-
-.doc-editor--readonly .doc-editor__page {
-  box-shadow: none;
-  border: 1px solid var(--border-light);
 }
 
 .split-layout__main--doc {

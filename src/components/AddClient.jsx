@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useAppSession } from '../lib/AppSessionContext'
 import DiagnosisPicker from './DiagnosisPicker'
 import PageHeader from './PageHeader'
 import { usePermissions } from '../lib/usePermissions'
@@ -9,7 +10,7 @@ import { getWorkplacesForUser, upsertClient, getClientById } from '../lib/store'
 export default function AddClient() {
   const navigate = useNavigate()
   const { clientId } = useParams()
-  const { session, myWorkplace, refreshClients } = useOutletContext()
+  const { session, myWorkplace, refreshClients } = useAppSession()
   const perms = usePermissions()
   const toast = useToast()
   const isEditMode = !!clientId

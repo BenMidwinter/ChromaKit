@@ -1,17 +1,21 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   APPOINTMENT_TYPES,
   getProgressNoteByAppointment,
+  getWorkplaceClinicians,
 } from '../lib/store'
 import {
   formatAppointmentDateTime,
   attendanceLabel,
   appointmentTypeLabel,
+  appointmentOtherInfo,
 } from '../lib/appointmentUtils'
 import { modalityLabel } from '../lib/calendarConstants'
 import { getAppointmentOrgServices } from '../lib/store'
 import { addDaysYmd } from '../lib/dateArchitecture'
+import { canAssignAppointmentClinician } from '../lib/permissions'
+import { CALENDAR_OWNER_ALL, CALENDAR_OWNER_ALL_TEAM } from '../lib/calendarOwners'
 
 function cx(...parts) {
   return parts.filter(Boolean).join(' ')
@@ -335,7 +339,24 @@ function appointmentFormSeed(appt) {
     end: appt.end_time || addMinutesToTimeStr(appt.start_time || '09:00', dur),
     durationStr: String(dur),
     location: appt.location || '',
+    otherInfo: appointmentOtherInfo(appt),
+    clinicianId: appt.clinician_id || '',
   }
+}
+
+function resolveBookingClinicianId({
+  calendarOwner,
+  selectedClient,
+  sessionUserId,
+  appointment,
+  workplaceClinicians,
+}) {
+  if (appointment?.clinician_id) return appointment.clinician_id
+  if (calendarOwner && calendarOwner !== CALENDAR_OWNER_ALL && calendarOwner !== CALENDAR_OWNER_ALL_TEAM) {
+    return calendarOwner
+  }
+  if (selectedClient?.user_id) return selectedClient.user_id
+  return workplaceClinicians[0]?.id || sessionUserId
 }
 
 function timesOverlap(aStart, aEnd, bStart, bEnd) {
@@ -498,6 +519,13 @@ function StandardEventBody({ appointment, locked, onAttendanceChange }) {
             meta={appointmentTypeLabel(appointment.appointment_type)}
             tags={invoiceTag(appointment.invoice_status || 'draft')}
           />
+          {appointmentOtherInfo(appointment) && (
+            <StackedDataRow
+              icon="ℹ️"
+              label="Other info"
+              value={appointmentOtherInfo(appointment)}
+            />
+          )}
         </StackedDataList>
       </section>
 
@@ -758,7 +786,9 @@ export function ScheduleSessionPanel({
   prefill = null,
   clients = [],
   allAppointments = [],
-  clinicianId,
+  sessionUserId,
+  myWorkplace = null,
+  calendarOwner = null,
   onSave,
   onCancel,
   saving = false,
@@ -766,6 +796,11 @@ export function ScheduleSessionPanel({
 }) {
   const seed = appointmentFormSeed(appointment) || appointmentFormSeed(prefill)
   const isEdit = Boolean(appointment?.id)
+
+  const workplaceClinicians = useMemo(
+    () => (myWorkplace?.id ? getWorkplaceClinicians(myWorkplace.id) : []),
+    [myWorkplace?.id],
+  )
 
   const [query, setQuery] = useState('')
   const [clientId, setClientId] = useState(seed?.clientId || '')
@@ -775,6 +810,8 @@ export function ScheduleSessionPanel({
   const [end, setEnd] = useState(seed?.end || addMinutesToTimeStr(startTime || '09:00', 60))
   const [durationStr, setDurationStr] = useState(seed?.durationStr || '60')
   const [location, setLocation] = useState(seed?.location || '')
+  const [otherInfo, setOtherInfo] = useState(seed?.otherInfo || '')
+  const [clinicianId, setClinicianId] = useState(seed?.clinicianId || sessionUserId || '')
   const [recurringWeekly, setRecurringWeekly] = useState(false)
   const [recurWeeks, setRecurWeeks] = useState(4)
 
@@ -794,8 +831,26 @@ export function ScheduleSessionPanel({
       setModality(nextSeed.modality)
       setDurationStr(nextSeed.durationStr)
       setLocation(nextSeed.location)
+      setOtherInfo(nextSeed.otherInfo)
+      setClinicianId(nextSeed.clinicianId)
     }
   }
+
+  const selectedClient = clients.find(c => c.id === clientId)
+  const showClinicianPicker = canAssignAppointmentClinician(myWorkplace, selectedClient)
+    && workplaceClinicians.length > 0
+
+  useEffect(() => {
+    if (isEdit || !selectedClient || !showClinicianPicker) return
+    const nextId = resolveBookingClinicianId({
+      calendarOwner,
+      selectedClient,
+      sessionUserId,
+      appointment: null,
+      workplaceClinicians,
+    })
+    if (nextId) setClinicianId(nextId)
+  }, [selectedClient?.id, calendarOwner, isEdit, showClinicianPicker, sessionUserId, workplaceClinicians])
 
   const durationMinutes = clampDuration(durationStr)
 
@@ -835,7 +890,6 @@ export function ScheduleSessionPanel({
     })
   }, [clients, query])
 
-  const selectedClient = clients.find(c => c.id === clientId)
   const computedDuration = Math.max(0, parseMinutes(end) - parseMinutes(start))
   const finalDuration = computedDuration > 0 ? computedDuration : durationMinutes
 
@@ -873,6 +927,8 @@ export function ScheduleSessionPanel({
       duration_minutes: finalDuration,
       therapy_modality: modality,
       location: location.trim(),
+      other_info: otherInfo.trim(),
+      clinician_id: showClinicianPicker ? clinicianId : sessionUserId,
       appointment_type: appointment?.appointment_type || prefill?.appointment_type || 'one_to_one',
       dates: bookDates,
     })
@@ -1023,6 +1079,36 @@ export function ScheduleSessionPanel({
           />
         </div>
 
+        <div className="form-group">
+          <label htmlFor="schedule-other-info">Other info</label>
+          <textarea
+            id="schedule-other-info"
+            className="paper-input"
+            rows={2}
+            placeholder="e.g. Parent attending, room change, equipment needed"
+            value={otherInfo}
+            onChange={e => setOtherInfo(e.target.value)}
+          />
+          <p className="text-small text-muted">Shown on the calendar block for this session.</p>
+        </div>
+
+        {showClinicianPicker && (
+          <div className="form-group">
+            <label htmlFor="schedule-clinician">Book with</label>
+            <select
+              id="schedule-clinician"
+              className="paper-input"
+              value={clinicianId}
+              onChange={e => setClinicianId(e.target.value)}
+              required
+            >
+              {workplaceClinicians.map(clinician => (
+                <option key={clinician.id} value={clinician.id}>{clinician.full_name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {!isEdit && (
           <div className="ck-recurring-inline">
             <label className="ck-recurring-inline__toggle">
@@ -1092,7 +1178,9 @@ export function RecurringSchedulePanel({
       duration_minutes: duration,
       therapy_modality: source.therapy_modality,
       location: source.location || '',
+      other_info: source.other_info || appointmentOtherInfo(source),
       appointment_type: source.appointment_type || 'one_to_one',
+      clinician_id: source.clinician_id,
     })
   }
 

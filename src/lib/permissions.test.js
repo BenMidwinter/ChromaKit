@@ -98,9 +98,9 @@ describe('clinical action gates', () => {
     expect(canAddPrivateClient(clinicianCtx)).toBe(true)
     expect(canAddPrivateClient(adminCtx)).toBe(false)
   })
-  it('only admins assign an appointment clinician, and only for workplace clients', () => {
+  it('clinical leads and administrators assign an appointment clinician for workplace clients', () => {
     expect(canAssignAppointmentClinician(adminCtx, wpClientOther)).toBe(true)
-    expect(canAssignAppointmentClinician(leadCtx, wpClientOther)).toBe(false)
+    expect(canAssignAppointmentClinician(leadCtx, wpClientOther)).toBe(true)
     expect(canAssignAppointmentClinician(adminCtx, privateClient)).toBe(false)
   })
 })

@@ -4,12 +4,23 @@ import { useClientSession } from '../../lib/useClientSession'
 import { getProfile, getAppointment } from '../../lib/store'
 import { useProgressNotesFeedQuery } from '../../lib/progressNoteQueries'
 import { formatDisplayDate } from '../../lib/dateArchitecture'
+import { progressNoteHistoryStatusLabel } from '../../lib/progressNoteLifecycle'
 import RecordListLayout from '../../components/RecordListLayout'
 import RecordTable from '../../components/RecordTable'
 import { formatSessionDateTime } from '../../lib/appointmentUtils'
 
+function NoteStatusTag({ status }) {
+  const isComplete = status === 'COMPLETE'
+  return (
+    <span className={`badge note-status-tag${isComplete ? ' badge-green' : ' badge-grey'}`}>
+      {status}
+    </span>
+  )
+}
+
 const NOTE_COLUMNS = [
   { key: 'title', label: 'Note title', filter: { type: 'text', placeholder: 'Filter title…' } },
+  { key: 'status', label: 'Status', filter: { type: 'select', allLabel: 'All statuses' } },
   { key: 'template', label: 'Note template', filter: { type: 'select', allLabel: 'All templates' } },
   { key: 'date', label: 'Date of note', filter: { type: 'text', placeholder: 'Filter date…' } },
   { key: 'appointment', label: 'Linked appointment', filter: { type: 'text', placeholder: 'Filter appointment…' } },
@@ -24,10 +35,12 @@ export default function NotesHistoryPanel() {
   const rows = useMemo(() => notes.map(note => {
     const author = getProfile(note.author_id)
     const appt = note.appointment_id ? getAppointment(note.appointment_id) : null
+    const status = progressNoteHistoryStatusLabel(note)
     return {
       id: note.id,
       note,
       filterValues: {
+        status,
         title: note.title,
         template: note.template_name || '—',
         date: formatDisplayDate(note.session_date),
@@ -36,6 +49,7 @@ export default function NotesHistoryPanel() {
       },
       cells: {
         title: <span className="record-table__primary">{note.title}</span>,
+        status: <NoteStatusTag status={status} />,
         template: note.template_name || '—',
         date: formatDisplayDate(note.session_date),
         appointment: appt

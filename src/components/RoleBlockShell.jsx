@@ -1,7 +1,7 @@
-import { ROLE_BLOCK_META } from '../lib/roleBlocks'
+import { ROLE_BLOCK_META, PROFILE_BLOCK_META } from '../lib/roleBlocks'
 import { ORG_BLOCK_META } from '../lib/orgBlocks'
 
-const BLOCK_META = { ...ROLE_BLOCK_META, ...ORG_BLOCK_META }
+const BLOCK_META = { ...ROLE_BLOCK_META, ...PROFILE_BLOCK_META, ...ORG_BLOCK_META }
 
 export default function RoleBlockShell({ blockId, title, description, children, actions }) {
   const meta = BLOCK_META[blockId] || {}

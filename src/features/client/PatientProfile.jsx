@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Outlet, useNavigate, useOutletContext } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
+import { useAppSession } from '../../lib/AppSessionContext'
+import { useAppClients } from '../../lib/queries'
 import BodyMap from './BodyMap'
 import ClientDetailsBar from './ClientDetailsBar'
 import ClientNav from './ClientNav'
@@ -11,8 +13,8 @@ import { shouldBlurClientIdentity } from '../../lib/demoPersonas'
 
 export default function PatientProfile({ client: initialClient }) {
   const navigate = useNavigate()
-  const parentContext = useOutletContext()
-  const { activePersona } = parentContext
+  const { activePersona, session } = useAppSession()
+  const { clients } = useAppClients()
   const [client, setClient] = useState(initialClient)
   const [showBodyMap, setShowBodyMap] = useState(false)
   const perms = usePermissions(client)
@@ -23,15 +25,15 @@ export default function PatientProfile({ client: initialClient }) {
   }, [initialClient])
 
   useEffect(() => {
-    const fresh = parentContext.clients?.find(c => c.id === initialClient.id)
+    const fresh = clients?.find(c => c.id === initialClient.id)
     if (fresh) setClient(fresh)
-  }, [parentContext.clients, initialClient.id])
+  }, [clients, initialClient.id])
 
   const handleClientUpdated = (updated) => {
     if (updated) setClient(updated)
   }
 
-  const assignmentHint = !perms.canViewFullCaseload && client.workplace_id && client.user_id !== parentContext.session?.user?.id
+  const assignmentHint = !perms.canViewFullCaseload && client.workplace_id && client.user_id !== session?.user?.id
     ? ' · Assigned to another clinician'
     : ''
 
@@ -66,7 +68,7 @@ export default function PatientProfile({ client: initialClient }) {
       <div className="client-layout flex min-h-0 flex-1">
         <ClientNav clientId={client.id} client={client} />
         <div className="client-layout__main min-w-0 flex-1">
-          <Outlet context={{ ...parentContext, client }} />
+          <Outlet context={{ client }} />
         </div>
       </div>
 

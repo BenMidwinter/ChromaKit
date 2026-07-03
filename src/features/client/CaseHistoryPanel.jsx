@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useParams, useOutletContext } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { useClientSession } from '../../lib/useClientSession'
 import { getEpisodes } from '../../lib/store'
 import { usePermissions } from '../../lib/usePermissions'
 import RecordListLayout from '../../components/RecordListLayout'
@@ -27,7 +28,7 @@ const EPISODE_COLUMNS = [
 
 export default function CaseHistoryPanel() {
   const { id: clientId } = useParams()
-  const { client } = useOutletContext()
+  const { client } = useClientSession()
   const perms = usePermissions(client)
   const toast = useToast()
   const episodes = getEpisodes(clientId)

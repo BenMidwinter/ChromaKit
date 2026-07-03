@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useParams, useOutletContext } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useClientSession } from '../../lib/useClientSession'
 import { usePermissions } from '../../lib/usePermissions'
 import {
@@ -18,6 +18,7 @@ import {
   appointmentDurationMinutes,
   formatSessionDateTime,
   attendanceLabel,
+  appointmentOtherInfo,
 } from '../../lib/appointmentUtils'
 import { addMinutesToTime } from '../../lib/dateArchitecture'
 import { useToast } from '../../components/ui'
@@ -39,8 +40,7 @@ function clampDuration(raw) {
 export default function AppointmentEditor() {
   const { appointmentId } = useParams()
   const navigate = useNavigate()
-  const { clientId, session } = useClientSession()
-  const { client } = useOutletContext()
+  const { clientId, client, session } = useClientSession()
   const perms = usePermissions(client)
   const toast = useToast()
   const isNew = appointmentId === 'new'
@@ -58,6 +58,7 @@ export default function AppointmentEditor() {
   const [appointmentType, setAppointmentType] = useState('one_to_one')
   const [episodeId, setEpisodeId] = useState(episodes[0]?.id || '')
   const [location, setLocation] = useState('')
+  const [otherInfo, setOtherInfo] = useState('')
   const [attendanceStatus, setAttendanceStatus] = useState(null)
   const [activeId, setActiveId] = useState(isNew ? null : appointmentId)
   const [linkedNote, setLinkedNote] = useState(null)
@@ -83,6 +84,7 @@ export default function AppointmentEditor() {
       setAppointmentType('one_to_one')
       setEpisodeId(episodes[0]?.id || '')
       setLocation('')
+      setOtherInfo('')
       setAttendanceStatus(null)
       setActiveId(null)
       setLinkedNote(null)
@@ -105,6 +107,7 @@ export default function AppointmentEditor() {
     setAppointmentType(appt.appointment_type)
     setEpisodeId(appt.episode_id || '')
     setLocation(appt.location || '')
+    setOtherInfo(appt.other_info || appointmentOtherInfo(appt))
     setAttendanceStatus(appt.attendance_status)
     setActiveId(appt.id)
     setClinicianId(appt.clinician_id || session?.user?.id || '')
@@ -162,6 +165,7 @@ export default function AppointmentEditor() {
         appointment_type: appointmentType,
         attendance_status: attendanceStatus,
         location,
+        other_info: otherInfo.trim(),
       },
       userId: session.user.id,
     })
@@ -352,6 +356,21 @@ export default function AppointmentEditor() {
             onChange={e => setLocation(e.target.value)}
             placeholder="e.g. Oak Academy — music room"
           />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="appt-other-info">Other info</label>
+          <textarea
+            id="appt-other-info"
+            className="paper-input"
+            rows={2}
+            value={otherInfo}
+            onChange={e => setOtherInfo(e.target.value)}
+            placeholder="e.g. Parent attending, room change, equipment needed"
+          />
+          <p className="text-small text-muted" style={{ marginTop: '0.35rem' }}>
+            Shown on the calendar block for this session.
+          </p>
         </div>
 
         <div className="form-group appointment-form__attendance">

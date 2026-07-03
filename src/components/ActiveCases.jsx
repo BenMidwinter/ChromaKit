@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useOutletContext, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { useAppClients } from '../lib/queries'
 import PageHeader, { PageHeaderFilter } from './PageHeader'
 import { usePermissions } from '../lib/usePermissions'
 import BlurredName from './BlurredName'
@@ -13,7 +14,7 @@ const CLIENT_COLUMNS = [
 ]
 
 export default function ActiveCases() {
-  const { clients } = useOutletContext()
+  const { clients } = useAppClients()
   const perms = usePermissions()
   const navigate = useNavigate()
   const [filterContext, setFilterContext] = useState('all')

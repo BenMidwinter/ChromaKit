@@ -1,0 +1,220 @@
+import { useMemo, useState } from 'react'
+import {
+  searchClinicianProfiles,
+} from '../../lib/store'
+import { WORKPLACE_MEMBERSHIP_ROLES } from '../../lib/roleBlocks'
+import { normalizeRole } from '../../lib/permissions'
+import {
+  useApproveMembershipRequestMutation,
+  useDeclineMembershipRequestMutation,
+  useInviteClinicianToWorkplaceMutation,
+  useMembershipRequestsQuery,
+  useWorkplaceAuditLogsQuery,
+} from '../../lib/workplaceQueries'
+
+export function InviteCliniciansPanel({ workplaceId, userId, myWorkplace, onChanged }) {
+  const [query, setQuery] = useState('')
+  const [inviteRoles, setInviteRoles] = useState({})
+  const [error, setError] = useState('')
+  const [busyId, setBusyId] = useState(null)
+  const inviteMutation = useInviteClinicianToWorkplaceMutation()
+
+  const results = useMemo(
+    () => (query.trim().length >= 2
+      ? searchClinicianProfiles(query, { workplaceId, excludeUserId: userId })
+      : []),
+    [query, workplaceId, userId],
+  )
+
+  const handleInvite = async (clinicianId) => {
+    setError('')
+    setBusyId(clinicianId)
+    try {
+      await inviteMutation.mutateAsync({
+        workplaceId,
+        userId: clinicianId,
+        actorId: userId,
+        myWorkplace,
+        role: inviteRoles[clinicianId] || 'clinician',
+      })
+      setQuery('')
+      onChanged?.()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  return (
+    <div className="role-block__panel">
+      <h3 className="role-block__panel-title">Invite ChromaKit users</h3>
+      <p className="text-muted text-small role-block__intro">
+        Search organisation clinician profiles and add them to your team with a role.
+      </p>
+      <div className="workplace-hub__search">
+        <input
+          type="search"
+          className="paper-input"
+          placeholder="Search by name, HCPC, or job title…"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
+      </div>
+      {error && <p className="form-error">{error}</p>}
+      {results.length > 0 && (
+        <ul className="workplace-hub__results">
+          {results.map(clinician => (
+            <li key={clinician.id} className="workplace-hub__result workplace-hub__result--actions">
+              <div className="workplace-hub__result-main">
+                <strong>{clinician.full_name}</strong>
+                <span className="text-small text-muted">
+                  {clinician.job_title}{clinician.hcpc_number ? ` · ${clinician.hcpc_number}` : ''}
+                </span>
+                {clinician.bio && <p className="text-small text-muted">{clinician.bio}</p>}
+              </div>
+              <div className="workplace-hub__row-actions">
+                <select
+                  className="paper-input paper-input--compact workplace-hub__role-select"
+                  value={inviteRoles[clinician.id] || 'clinician'}
+                  onChange={e => setInviteRoles(prev => ({ ...prev, [clinician.id]: e.target.value }))}
+                  aria-label={`Role for ${clinician.full_name}`}
+                >
+                  {WORKPLACE_MEMBERSHIP_ROLES.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={busyId === clinician.id}
+                  onClick={() => handleInvite(clinician.id)}
+                >
+                  {busyId === clinician.id ? 'Adding…' : 'Add to team'}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+export function JoinRequestsPanel({ workplaceId, userId, myWorkplace, onChanged }) {
+  const [error, setError] = useState('')
+  const [busyId, setBusyId] = useState(null)
+  const [approveRoles, setApproveRoles] = useState({})
+  const { data: requests = [] } = useMembershipRequestsQuery(workplaceId)
+  const approveMutation = useApproveMembershipRequestMutation()
+  const declineMutation = useDeclineMembershipRequestMutation()
+
+  const handleApprove = async (requestId) => {
+    setError('')
+    setBusyId(requestId)
+    try {
+      const role = approveRoles[requestId] || 'clinician'
+      await approveMutation.mutateAsync({ requestId, actorId: userId, myWorkplace, role })
+      onChanged?.()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const handleDecline = async (requestId) => {
+    setError('')
+    setBusyId(requestId)
+    try {
+      await declineMutation.mutateAsync({ requestId, actorId: userId, myWorkplace })
+      onChanged?.()
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  return (
+    <div className="role-block__panel">
+      <h3 className="role-block__panel-title">Join requests ({requests.length})</h3>
+      <p className="text-muted text-small role-block__intro">
+        Review clinicians who have asked to join this workplace and assign their role.
+      </p>
+      {error && <p className="form-error">{error}</p>}
+      {requests.length === 0 ? (
+        <div className="empty-state">No pending requests.</div>
+      ) : (
+        <ul className="workplace-hub__results">
+          {requests.map(req => (
+            <li key={req.id} className="workplace-hub__result workplace-hub__result--actions">
+              <div className="workplace-hub__result-main">
+                <strong>{req.full_name}</strong>
+                <span className="text-small text-muted">
+                  {req.job_title}{req.hcpc_number ? ` · ${req.hcpc_number}` : ''}
+                </span>
+                {req.message && <p className="text-small text-muted">{req.message}</p>}
+              </div>
+              <div className="workplace-hub__row-actions">
+                <select
+                  className="paper-input paper-input--compact workplace-hub__role-select"
+                  value={approveRoles[req.id] || 'clinician'}
+                  onChange={e => setApproveRoles(prev => ({ ...prev, [req.id]: e.target.value }))}
+                  aria-label={`Role for ${req.full_name}`}
+                >
+                  {WORKPLACE_MEMBERSHIP_ROLES.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={busyId === req.id}
+                  onClick={() => handleApprove(req.id)}
+                >
+                  Accept
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={busyId === req.id}
+                  onClick={() => handleDecline(req.id)}
+                >
+                  Decline
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+export function AuditLogPanel({ workplaceId, myWorkplace }) {
+  const { data: logs = [] } = useWorkplaceAuditLogsQuery(workplaceId, myWorkplace)
+
+  return (
+    <div className="role-block__panel">
+      <h3 className="role-block__panel-title">Audit log</h3>
+      <p className="text-muted text-small role-block__intro">
+        Historical actions recorded for this workplace.
+      </p>
+      {logs.length === 0 ? (
+        <div className="empty-state">No audit entries yet.</div>
+      ) : (
+        <ul className="workplace-hub__audit text-muted">
+          {logs.map(l => (
+            <li key={l.id}>
+              {l.detail}{' '}
+              <span className="text-small">({new Date(l.created_at).toLocaleDateString()})</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+export function formatMemberRole(role) {
+  return normalizeRole(role).replace(/_/g, ' ')
+}

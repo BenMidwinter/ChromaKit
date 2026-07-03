@@ -1,4 +1,6 @@
-import { Link, useOutletContext } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { useAppSession } from '../lib/AppSessionContext'
+import { useAppClients } from '../lib/queries'
 import PageHeader from './PageHeader'
 import { APPOINTMENT_TYPES } from '../lib/store'
 import { useUpcomingAppointmentsQuery } from '../lib/appointmentQueries'
@@ -70,7 +72,8 @@ function LaterGroup({ items, clientName, blurNames }) {
 }
 
 export default function UpcomingAppointments() {
-  const { session, myWorkplace, clients } = useOutletContext()
+  const { session, myWorkplace } = useAppSession()
+  const { clients } = useAppClients()
   const perms = usePermissions()
   const { data: upcoming = [] } = useUpcomingAppointmentsQuery({
     userId: session.user.id,

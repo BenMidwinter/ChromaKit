@@ -1,4 +1,5 @@
-import { Outlet, useOutletContext, useLocation } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
+import { useAppSession } from '../../lib/AppSessionContext'
 import { ROLES } from '../../lib/permissions'
 import { getServiceLeadPageMeta } from '../../lib/serviceLeadPages'
 import { getPersonaForRole } from '../../lib/demoPersonas'
@@ -6,8 +7,7 @@ import PageHeader from '../../components/PageHeader'
 import ServiceLeadNav from './ServiceLeadNav'
 
 export default function ServiceLeadLayout() {
-  const parentContext = useOutletContext()
-  const { demoRole } = parentContext || {}
+  const { demoRole } = useAppSession()
   const location = useLocation()
   const pageMeta = getServiceLeadPageMeta(location.pathname)
   const serviceLeadPersona = getPersonaForRole(ROLES.SERVICE_LEAD)
@@ -38,7 +38,7 @@ export default function ServiceLeadLayout() {
       />
       <ServiceLeadNav />
       <div className="service-lead-outlet">
-        <Outlet context={parentContext} />
+        <Outlet />
       </div>
     </div>
   )

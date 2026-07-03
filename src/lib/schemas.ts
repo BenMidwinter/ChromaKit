@@ -45,6 +45,7 @@ export const progressNoteInputSchema = z
     modality_used: z.string().nullish(),
     therapeutic_theme: optionalText,
     artwork_attachments: z.array(z.unknown()).optional(),
+    status: z.enum(['draft', 'signed_off']).optional(),
   })
   .refine((p) => Boolean(p.id || p.client_id), {
     message: 'A client is required to create a progress note.',
@@ -93,6 +94,7 @@ export const appointmentInputSchema = z
     attendance_status: z.enum(attendanceStatusKeys).nullish(),
     location: optionalText,
     notes: z.string().optional(),
+    other_info: z.string().optional(),
   })
   .refine((p) => Boolean(p.id || p.client_id), {
     message: 'A client is required to schedule an appointment.',
@@ -106,7 +108,56 @@ export const appointmentInputSchema = z
 export const workplaceInputSchema = z.object({
   name: requiredText('Workplace name'),
   join_code: optionalText,
+  logo_url: optionalText,
+  address_line1: optionalText,
+  address_line2: optionalText,
+  address_line3: optionalText,
+  postcode: optionalText,
+  country: optionalText,
 })
+
+export const workplaceBrandingUpdateSchema = z.object({
+  logo_url: optionalText,
+  address_line1: requiredText('Address line 1'),
+  address_line2: optionalText,
+  address_line3: optionalText,
+  postcode: optionalText,
+  country: optionalText,
+})
+
+export const practiceBrandingUpdateSchema = z.object({
+  practice_name: optionalText,
+  practice_logo_url: optionalText,
+  practice_address_line1: requiredText('Address line 1'),
+  practice_address_line2: optionalText,
+  practice_address_line3: optionalText,
+  practice_postcode: optionalText,
+  practice_country: optionalText,
+})
+
+const dayHoursSchema = z.object({
+  enabled: z.boolean(),
+  start: timeString,
+  end: timeString,
+})
+
+const weeklyHoursSchema = z.object({
+  mon: dayHoursSchema,
+  tue: dayHoursSchema,
+  wed: dayHoursSchema,
+  thu: dayHoursSchema,
+  fri: dayHoursSchema,
+  sat: dayHoursSchema,
+  sun: dayHoursSchema,
+})
+
+export const workplaceClinicianSettingSchema = z.object({
+  workplace_id: requiredText('Workplace'),
+  weekly_hours: weeklyHoursSchema,
+  service_ids: z.array(z.string()).default([]),
+})
+
+export const clinicianWorkplaceSettingsSchema = z.array(workplaceClinicianSettingSchema).min(1)
 
 export const clinicianUserInputSchema = z.object({
   full_name: requiredText('Full name'),

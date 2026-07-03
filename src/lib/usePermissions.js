@@ -1,9 +1,9 @@
-import { useOutletContext } from 'react-router-dom'
 import { buildPermissions, ROLES } from './permissions'
+import { useAppSession } from './AppSessionContext'
 
 /** Permissions for the current user, optional client, and demo role override. */
 export function usePermissions(client = null) {
-  const { session, myWorkplace, demoRole } = useOutletContext()
+  const { session, myWorkplace, demoRole } = useAppSession()
   const base = buildPermissions(myWorkplace, client, session?.user?.id)
   return {
     ...base,

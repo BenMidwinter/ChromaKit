@@ -2,7 +2,16 @@
 
 Clinical practice management for creative arts therapies — client records, scheduling, progress notes, letters, and organisation administration in a single workspace.
 
-**Status:** Early prototype (v0.1.0). Frontend-only with in-memory seed data; no backend or authentication yet.
+**Status:** Prototype (v0.2.0). Frontend-only with in-memory seed data; no backend or authentication yet.
+
+## What's new in v0.2.0
+
+- **Clinician profile hub** — job title vs professional title, biography, photo, handwritten signature upload, per-location availability and services
+- **Workplace branding** — letterhead editable by clinical leads; flows into note and letter exports
+- **Progress notes** — draft/complete lifecycle, filterable notes history, rich signature module (draw / account / script font)
+- **Calendar** — appointment **Other info** on session blocks; leads and admins pick which clinician to book with
+- **Architecture** — home, workplace, and profile promoted to `features/`; most `lib/` and store modules typed in TypeScript
+- **Tests** — 156 unit tests on headless `lib/` logic
 
 ## Features
 
@@ -10,11 +19,12 @@ Clinical practice management for creative arts therapies — client records, sch
 
 - Home dashboard, calendar, and upcoming appointments
 - Client list, intake, and patient profiles
-- Appointment booking and session management
-- Progress notes with TipTap rich-text editing
+- Appointment booking (with other info and clinician assignment for leads/admins)
+- Progress notes with TipTap rich-text editing, sign-off, and notes history
 - Letters, case history, working documents, and clinical insights
 - Body map and expressive colour wheel tooling
 - Multi-workplace context switching
+- Clinician profile: availability, private-practice letterhead, signature assets
 
 ### Service Lead / organisation admin
 
@@ -28,7 +38,7 @@ Clinical practice management for creative arts therapies — client records, sch
 - Light Chroma and Dark Studio themes
 - Toast and dialog UX (no native browser alerts)
 - Zod validation at data-write boundaries
-- 83 unit tests on pure `lib/` logic
+- TanStack Query for clients, appointments, progress notes, workplace team, and org config
 
 ## Tech stack
 
@@ -37,10 +47,10 @@ Clinical practice management for creative arts therapies — client records, sch
 | UI | React 19, React Router 7 |
 | Build | Vite (rolldown) |
 | Styling | Tailwind CSS 4 + design-token bridge |
-| Data | TanStack Query (clients/workplaces), in-memory store |
+| Data | TanStack Query, in-memory store (`lib/store/`) |
 | Editors | TipTap, React Flow (`@xyflow/react`) |
 | Validation | Zod |
-| Tests | Vitest |
+| Tests | Vitest (156 tests) |
 
 ## Getting started
 
@@ -73,23 +83,28 @@ Use the profile switcher in the app header to explore role-specific behaviour:
 
 | Persona | Role | Good for testing |
 | --- | --- | --- |
-| **Ben** | Clinical Lead | Client add/edit, appointments, home dashboard |
-| **Sarah** | Clinician | Day-to-day clinical workflows |
+| **Ben** | Clinical Lead | Profile, workplace branding, calendar booking for team, client add/edit |
+| **Sarah** | Clinician | Day-to-day clinical workflows, own calendar |
 | **Daniel** | Service Lead | `/service-lead/*` admin screens, blurred client identity |
-| **Alex** | Administrator | Operations and workplace views |
+| **Alex** | Administrator | Operations, calendar booking for clinicians |
 
 ## Project structure
 
 ```
 src/
-├── components/          # Shared UI and clinical screens
+├── components/          # Shared UI (editors, layout, signature pad…)
 ├── features/
-│   └── service-lead/    # Organisation admin (feature-folder pilot)
+│   ├── calendar/        # Calendar module + page
+│   ├── client/          # Patient profile, notes, appointments
+│   ├── home/            # Role-based home dashboard blocks
+│   ├── profile/         # Clinician profile hub + journal
+│   ├── service-lead/    # Organisation admin
+│   └── workplace/       # Team, branding, join requests
 ├── lib/
-│   ├── data/            # Collection accessors
-│   ├── store/           # Domain mutations (clients, scheduling, docs…)
+│   ├── data/            # Collection accessors (TypeScript)
+│   ├── store/           # Domain mutations (TypeScript)
 │   ├── mockData.js      # Seed data — replace with a backend when ready
-│   └── *.ts / *.js      # Headless logic + unit tests
+│   └── *.ts             # Headless logic + unit tests
 ├── styles/              # CSS partials and design tokens
 ├── App.jsx              # Route definitions
 └── main.jsx             # App shell, QueryClient, providers
@@ -97,9 +112,9 @@ src/
 
 ## Architecture
 
-ChromaKit is being incrementally refactored toward four design pillars: feature encapsulation, unidirectional data flow, headless core logic, and defensive boundaries.
+ChromaKit follows four design pillars: feature encapsulation, unidirectional data flow, headless core logic, and defensive boundaries.
 
-See **[ARCHITECTURE.md](./ARCHITECTURE.md)** for the rollout checklist, completed vertical slices, and the current Phase A execution plan.
+See **[ARCHITECTURE.md](./ARCHITECTURE.md)** for the rollout checklist, completed vertical slices, v0.2.0 delivery notes, and the clinical operations roadmap.
 
 ## Deployment
 

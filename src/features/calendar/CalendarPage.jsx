@@ -1,9 +1,9 @@
-import { useOutletContext } from 'react-router-dom'
+import { useAppSession } from '../../lib/AppSessionContext'
 import CalendarModule from './CalendarModule'
 import ErrorBoundary from '../../components/ErrorBoundary'
 
 export default function Calendar() {
-  const { activePersona } = useOutletContext()
+  const { activePersona } = useAppSession()
 
   return (
     <div className="page page--calendar">

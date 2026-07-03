@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useAppSession } from '../../lib/AppSessionContext'
 import { getProfile } from '../../lib/store'
 import { usePermissions } from '../../lib/usePermissions'
 import ClientProfileOverlay from './ClientProfileOverlay'
 
 export default function ClientDetailsBar({ client, onClientUpdated, embedded = false }) {
-  const { refreshClients } = useOutletContext()
+  const { refreshClients } = useAppSession()
   const perms = usePermissions(client)
   const [showEdit, setShowEdit] = useState(false)
   const lead = getProfile(client.user_id)

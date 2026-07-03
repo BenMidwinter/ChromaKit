@@ -159,7 +159,7 @@ export function addMinutesToTime(time: string | null | undefined, minutes: numbe
 
 /** Half-hour (or custom) slot starts between startHour and endHour (exclusive end). */
 export function buildCalendarTimeSlots(startHour = 8, endHour = 18, intervalMinutes = 30): string[] {
-  const slots = []
+  const slots: string[] = []
   let cursor = startHour * 60
   const end = endHour * 60
   while (cursor < end) {

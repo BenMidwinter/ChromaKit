@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useNavigate, useSearchParams, Link, useOutletContext } from 'react-router-dom'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useClientSession } from '../../lib/useClientSession'
 import {
   WorkspaceLayout,
   StickyContextBar,
   SplitWorkspace,
-  ClinicalPaper,
 } from '../../components/LayoutComponents'
 import RichTextEditor from '../../components/RichTextEditor'
 import TemplatePicker, { hasMeaningfulEditorContent } from '../../components/TemplatePicker'
@@ -25,7 +25,16 @@ import {
   useProgressNoteByAppointmentQuery,
   useAvailableProgressNoteTemplatesQuery,
   useSaveProgressNoteMutation,
+  useSignOffProgressNoteMutation,
 } from '../../lib/progressNoteQueries'
+import {
+  isProgressNoteEditable,
+  isProgressNoteSignedOff,
+  formatLockDeadline,
+  PROGRESS_NOTE_LOCK_HOURS,
+} from '../../lib/progressNoteLifecycle'
+import { downloadProgressNotePdf } from '../../lib/clinicalExport'
+import { getClinicalExportBranding } from '../../lib/workplaceBranding'
 import {
   formatAppointmentDateTime,
   formatAppointmentDate,
@@ -168,7 +177,7 @@ function ProgressNotesPageContent() {
   const appointmentParam = searchParams.get('appointment')
   const noteParam = searchParams.get('note')
   const navigate = useNavigate()
-  const { client, session, refreshClients } = useOutletContext()
+  const { client, session, refreshClients } = useClientSession()
   const perms = usePermissions(client)
   const toast = useToast()
   const confirm = useConfirm()
@@ -185,6 +194,16 @@ function ProgressNotesPageContent() {
   const [artworkAttachments, setArtworkAttachments] = useState([])
   const [noteEditor, setNoteEditor] = useState(null)
   const [railTab, setRailTab] = useState(RAIL_TABS.INSIGHTS)
+  const [noteMeta, setNoteMeta] = useState({
+    status: 'draft',
+    signed_off_at: null,
+    lock_until: null,
+    is_locked: false,
+  })
+  const [autoSaveStatus, setAutoSaveStatus] = useState('idle')
+  const [lastSavedAt, setLastSavedAt] = useState(null)
+  const autoSaveKeyRef = useRef('')
+  const autoSaveTimerRef = useRef(null)
 
   const { data: notes = [] } = useClientProgressNotesQuery(client?.id)
   const { data: noteFromUrl, isPending: noteFromUrlPending } = useProgressNoteQuery(noteParam, {
@@ -195,7 +214,8 @@ function ProgressNotesPageContent() {
   })
   const { data: noteTemplates = [] } = useAvailableProgressNoteTemplatesQuery(client?.workplace_id)
   const saveNoteMutation = useSaveProgressNoteMutation()
-  const saving = saveNoteMutation.isPending
+  const signOffMutation = useSignOffProgressNoteMutation()
+  const saving = saveNoteMutation.isPending || signOffMutation.isPending
 
   const linkedAppointment = useMemo(() => {
     if (!appointmentParam || !client?.id) return null
@@ -204,8 +224,48 @@ function ProgressNotesPageContent() {
     return appt
   }, [appointmentParam, client?.id])
 
+  const applySavedNote = useCallback((saved) => {
+    setActiveNoteId(saved.id)
+    setNoteMeta({
+      status: saved.status || 'draft',
+      signed_off_at: saved.signed_off_at || null,
+      lock_until: saved.lock_until || null,
+      is_locked: Boolean(saved.is_locked),
+    })
+  }, [])
+
+  const buildNotePayload = useCallback(() => ({
+    id: activeNoteId || undefined,
+    client_id: client.id,
+    appointment_id: linkedAppointment?.id ?? null,
+    title: title.trim() || `Session note — ${sessionDate}`,
+    content,
+    session_date: sessionDate,
+    modality_used: modalityUsed || null,
+    therapeutic_theme: therapeuticTheme.trim(),
+    artwork_attachments: artworkAttachments,
+  }), [
+    activeNoteId,
+    client.id,
+    linkedAppointment?.id,
+    title,
+    content,
+    sessionDate,
+    modalityUsed,
+    therapeuticTheme,
+    artworkAttachments,
+  ])
+
+  const noteEditable = isProgressNoteEditable(noteMeta)
+  const noteSignedOff = isProgressNoteSignedOff(noteMeta)
+  const lockDeadlineLabel = formatLockDeadline(noteMeta.lock_until)
+
   const isStandalone = !linkedAppointment
   const clinicianProfile = session?.user?.id ? getProfile(session.user.id) : null
+
+  const syncAutoSaveBaseline = useCallback((payload) => {
+    autoSaveKeyRef.current = JSON.stringify(payload)
+  }, [])
 
   useEffect(() => {
     if (noteParam && client?.id && !appointmentParam) {
@@ -219,6 +279,18 @@ function ProgressNotesPageContent() {
         setTherapeuticTheme(existing.therapeutic_theme || '')
         setArtworkAttachments(existing.artwork_attachments || [])
         setActiveNoteId(existing.id)
+        applySavedNote(existing)
+        syncAutoSaveBaseline({
+          id: existing.id,
+          client_id: client.id,
+          appointment_id: existing.appointment_id,
+          title: existing.title,
+          content: existing.content,
+          session_date: existing.session_date,
+          modality_used: existing.modality_used || null,
+          therapeutic_theme: existing.therapeutic_theme || '',
+          artwork_attachments: existing.artwork_attachments || [],
+        })
         setPrefillReady(true)
         return
       }
@@ -233,6 +305,8 @@ function ProgressNotesPageContent() {
         setTherapeuticTheme('')
         setArtworkAttachments([])
         setActiveNoteId(null)
+        setNoteMeta({ status: 'draft', signed_off_at: null, lock_until: null, is_locked: false })
+        autoSaveKeyRef.current = ''
       }
       setPrefillReady(true)
       return
@@ -255,6 +329,18 @@ function ProgressNotesPageContent() {
       setTherapeuticTheme(existing.therapeutic_theme || '')
       setArtworkAttachments(existing.artwork_attachments || [])
       setActiveNoteId(existing.id)
+      applySavedNote(existing)
+      syncAutoSaveBaseline({
+        id: existing.id,
+        client_id: client.id,
+        appointment_id: existing.appointment_id,
+        title: existing.title,
+        content: existing.content,
+        session_date: existing.session_date,
+        modality_used: existing.modality_used || null,
+        therapeutic_theme: existing.therapeutic_theme || '',
+        artwork_attachments: existing.artwork_attachments || [],
+      })
       setPrefillReady(true)
       return
     }
@@ -267,6 +353,8 @@ function ProgressNotesPageContent() {
     setTherapeuticTheme('')
     setArtworkAttachments([])
     setActiveNoteId(null)
+    setNoteMeta({ status: 'draft', signed_off_at: null, lock_until: null, is_locked: false })
+    autoSaveKeyRef.current = ''
     setPrefillReady(true)
   }, [
     appointmentParam,
@@ -277,6 +365,8 @@ function ProgressNotesPageContent() {
     noteFromUrlPending,
     noteFromAppointment,
     noteFromAppointmentPending,
+    applySavedNote,
+    syncAutoSaveBaseline,
   ])
 
   const noteHeading = activeNoteId
@@ -337,41 +427,148 @@ function ProgressNotesPageContent() {
     noteEditor.chain().focus().insertContent(`${text} `).run()
   }, [noteEditor])
 
-  const handleSave = () => {
+  const persistNote = useCallback(({
+    onSuccess,
+    silent = false,
+    redirectAfterSave = false,
+  } = {}) => {
+    if (!session?.user?.id) {
+      if (!silent) toast.error('Session unavailable — please refresh the page.')
+      return
+    }
+    if (noteMeta.is_locked) {
+      if (!silent) toast.error('This note is locked and cannot be edited.')
+      return
+    }
+    const payload = buildNotePayload()
+    saveNoteMutation.mutate(
+      { payload, userId: session.user.id },
+      {
+        onSuccess: (saved) => {
+          applySavedNote(saved)
+          syncAutoSaveBaseline(payload)
+          setLastSavedAt(Date.now())
+          setAutoSaveStatus('saved')
+          refreshClients?.()
+          if (redirectAfterSave) {
+            navigate(`/clients/${client.id}/notes-history`)
+          } else if (isStandalone && !noteParam && saved.id) {
+            navigate(`/clients/${client.id}/progress-notes?note=${saved.id}`, { replace: true })
+          }
+          onSuccess?.(saved)
+        },
+        onError: () => {
+          setAutoSaveStatus('error')
+          if (!silent) toast.error('Could not save this note.')
+        },
+      },
+    )
+  }, [
+    session?.user?.id,
+    noteMeta.is_locked,
+    buildNotePayload,
+    saveNoteMutation,
+    applySavedNote,
+    syncAutoSaveBaseline,
+    refreshClients,
+    isStandalone,
+    noteParam,
+    client.id,
+    navigate,
+    toast,
+  ])
+
+  useEffect(() => {
+    if (!prefillReady || !client?.id || !session?.user?.id || noteMeta.is_locked) return
+
+    const payload = buildNotePayload()
+    const key = JSON.stringify(payload)
+    if (key === autoSaveKeyRef.current) return
+
+    clearTimeout(autoSaveTimerRef.current)
+    autoSaveTimerRef.current = setTimeout(() => {
+      setAutoSaveStatus('saving')
+      persistNote({ silent: true })
+    }, 2500)
+
+    return () => clearTimeout(autoSaveTimerRef.current)
+  }, [prefillReady, client?.id, session?.user?.id, noteMeta.is_locked, buildNotePayload, persistNote])
+
+  const handleSaveDraft = () => {
     if (!title.trim()) {
       toast.error('Please add a title for this note.')
       return
     }
-    if (!session?.user?.id) {
-      toast.error('Session unavailable — please refresh the page.')
+    persistNote({
+      redirectAfterSave: true,
+      onSuccess: () => toast.success('Draft saved'),
+    })
+  }
+
+  const handleSignOff = async () => {
+    if (!title.trim()) {
+      toast.error('Please add a title before sign-off.')
       return
     }
-    saveNoteMutation.mutate(
-      {
-        payload: {
-          id: activeNoteId || undefined,
-          client_id: client.id,
-          appointment_id: linkedAppointment?.id ?? null,
-          title: title.trim(),
-          content,
-          session_date: sessionDate,
-          modality_used: modalityUsed || null,
-          therapeutic_theme: therapeuticTheme.trim(),
-          artwork_attachments: artworkAttachments,
-        },
-        userId: session.user.id,
-      },
+    if (noteSignedOff) {
+      toast.info(noteMeta.is_locked
+        ? 'This note is locked.'
+        : `Already signed off — amendments allowed until ${lockDeadlineLabel}.`)
+      return
+    }
+    const ok = await confirm({
+      title: 'Save and sign off?',
+      message: `The note will be signed off and remain editable for ${PROGRESS_NOTE_LOCK_HOURS} hours. After that it locks permanently.`,
+      confirmLabel: 'Save & sign-off',
+    })
+    if (!ok) return
+
+    const payload = buildNotePayload()
+    signOffMutation.mutate(
+      { payload, userId: session.user.id },
       {
         onSuccess: (saved) => {
-          setActiveNoteId(saved.id)
+          applySavedNote(saved)
+          syncAutoSaveBaseline(payload)
+          setLastSavedAt(Date.now())
+          setAutoSaveStatus('saved')
           refreshClients?.()
-          if (isStandalone && !noteParam) {
-            navigate(`/clients/${client.id}/progress-notes?note=${saved.id}`, { replace: true })
-          }
+          toast.success(`Signed off — amendments allowed until ${formatLockDeadline(saved.lock_until)}`)
+          navigate(`/clients/${client.id}/notes-history`)
+        },
+        onError: (err) => {
+          toast.error(err?.message || 'Could not sign off this note.')
         },
       },
     )
   }
+
+  const handleDownload = () => {
+    const note = {
+      ...buildNotePayload(),
+      status: noteMeta.status,
+      signed_off_at: noteMeta.signed_off_at,
+    }
+    const branding = getClinicalExportBranding(client.workplace_id, session?.user?.id)
+    const opened = downloadProgressNotePdf(note, {
+      clientName: client.real_name,
+      authorName: clinicianProfile?.full_name,
+      branding,
+    })
+    if (!opened) {
+      toast.error('Could not open the print dialog. Please try again.')
+      return
+    }
+    toast.info('Choose “Save as PDF” in the print dialog.')
+  }
+
+  const autoSaveLabel = autoSaveStatus === 'saving'
+    ? 'Saving…'
+    : autoSaveStatus === 'error'
+      ? 'Auto-save failed'
+      : lastSavedAt
+        ? `Saved ${new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        : 'Auto-save on'
 
   if (!prefillReady) return null
 
@@ -417,9 +614,30 @@ function ProgressNotesPageContent() {
           </>
         )}
         trailing={(
-          <button type="button" className="primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save note'}
-          </button>
+          <div className="progress-notes-page__header-actions">
+            <span className="progress-notes-page__save-status text-small text-muted" aria-live="polite">
+              {noteMeta.is_locked ? 'Locked' : autoSaveLabel}
+            </span>
+            <button type="button" className="secondary" onClick={handleDownload}>
+              Download
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={handleSaveDraft}
+              disabled={saving || !noteEditable}
+            >
+              {saving ? 'Saving…' : 'Save draft'}
+            </button>
+            <button
+              type="button"
+              className="primary"
+              onClick={handleSignOff}
+              disabled={saving || !noteEditable || noteSignedOff}
+            >
+              {noteSignedOff && !noteMeta.is_locked ? 'Signed off' : 'Save & sign-off'}
+            </button>
+          </div>
         )}
       />
 
@@ -442,6 +660,20 @@ function ProgressNotesPageContent() {
         </div>
       )}
 
+      {noteMeta.is_locked ? (
+        <div className="progress-notes-page__banner progress-notes-page__banner--locked" role="status">
+          <span className="text-small">
+            <strong>Locked.</strong> This note was signed off and the {PROGRESS_NOTE_LOCK_HOURS}-hour amendment window has ended.
+          </span>
+        </div>
+      ) : noteSignedOff && lockDeadlineLabel ? (
+        <div className="progress-notes-page__banner progress-notes-page__banner--signed-off" role="status">
+          <span className="text-small">
+            <strong>Signed off.</strong> Amendments allowed until {lockDeadlineLabel}, then this note locks permanently.
+          </span>
+        </div>
+      ) : null}
+
       <div className="progress-notes-page__meta-bar" role="group" aria-label="Note metadata">
         <label className="progress-notes-page__meta-field progress-notes-page__meta-field--title">
           <span className="progress-notes-page__meta-label">Title</span>
@@ -450,6 +682,7 @@ function ProgressNotesPageContent() {
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Session note title"
+            disabled={!noteEditable}
           />
         </label>
 
@@ -460,12 +693,13 @@ function ProgressNotesPageContent() {
             className="progress-notes-page__meta-input"
             value={sessionDate}
             onChange={e => setSessionDate(e.target.value)}
+            disabled={!noteEditable}
           />
         </label>
 
         <label className="progress-notes-page__meta-field">
           <span className="progress-notes-page__meta-label">Modality</span>
-          <select className="progress-notes-page__meta-input" value={modalityUsed} onChange={e => setModalityUsed(e.target.value)}>
+          <select className="progress-notes-page__meta-input" value={modalityUsed} onChange={e => setModalityUsed(e.target.value)} disabled={!noteEditable}>
             <option value="">Select…</option>
             {MODALITY_OPTIONS.map(m => (
               <option key={m.value} value={m.value}>{m.label}</option>
@@ -480,6 +714,7 @@ function ProgressNotesPageContent() {
             value={therapeuticTheme}
             onChange={e => setTherapeuticTheme(e.target.value)}
             placeholder="e.g. Bridge / transition"
+            disabled={!noteEditable}
           />
         </label>
 
@@ -502,20 +737,23 @@ function ProgressNotesPageContent() {
               <ArtworkAttachmentZone
                 attachments={artworkAttachments}
                 onChange={setArtworkAttachments}
+                disabled={!noteEditable}
               />
             </div>
-            <ClinicalPaper variant="letter" className="progress-notes-page__canvas-zone">
+            <div className="progress-notes-page__canvas-zone">
               <RichTextEditor
                 key={`${activeNoteId || 'new'}-${linkedAppointment?.id || 'standalone'}-${editorVersion}`}
                 content={content}
                 onChange={setContent}
+                layout="immersive"
                 variant="a4"
                 mode="clinical"
+                editable={noteEditable}
                 mergeContext={mergeContext}
                 clinicianProfile={clinicianProfile}
                 onEditorReady={setNoteEditor}
               />
-            </ClinicalPaper>
+            </div>
           </main>
         )}
         accessory={(

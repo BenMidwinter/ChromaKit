@@ -34,6 +34,12 @@
   --color-ink: var(--txt-body);
   --color-subtle: var(--txt-muted);
   --color-inverse: var(--txt-inverse);
+
+  /* Document editor surfaces — per-theme legibility tokens in :root / [data-theme]. */
+  --color-editor-chrome: var(--editor-chrome-bg);
+  --color-editor-canvas: var(--editor-canvas-bg);
+  --color-editor-sheet: var(--editor-sheet-bg);
+  --color-editor-prose: var(--editor-prose-color);
 }
 
 /* ChromatiK — corporate theme (inspired by wearechroma.com) */

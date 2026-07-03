@@ -1,11 +1,12 @@
-import { useParams, useOutletContext } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { useClientSession } from '../../lib/useClientSession'
 import ClientTimeline from './ClientTimeline'
 import ClientClinicalProfileSummary from './ClientClinicalProfileSummary'
 import { getClientTimeline } from '../../lib/store'
 
 export default function ClientPanelEmpty() {
   const { id: clientId } = useParams()
-  const { client } = useOutletContext()
+  const { client } = useClientSession()
   const timeline = getClientTimeline(clientId)
 
   return (
