@@ -1,21 +1,17 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom'
 import RichTextEditor from '../../components/RichTextEditor'
-import {
-  getLetterTemplate,
-  saveLetterTemplate,
-  getAllWorkplaces,
-  getProfile,
-} from '../../lib/store'
-import { buildMergeContext } from '../../lib/mergeFields'
+import { getProfile } from '../../lib/store'
+import { buildDemoTemplateMergeContext } from '../../lib/demoPersonas'
 import { useToast } from '../../components/ui'
+import {
+  useLetterTemplateQuery,
+  useOrgWorkplacesQuery,
+  useSaveLetterTemplateMutation,
+} from '../../lib/orgQueries'
+import OrgConfigBlock from './blocks/OrgConfigBlock'
 
-const DEMO_MERGE_CONTEXT = buildMergeContext({
-  client: { real_name: 'Alex Johnson', dob: '2008-04-12' },
-  appointment: null,
-  profile: { full_name: 'Ben Midwinter', job_title: 'Music Therapist', hcpc_number: 'MT12345' },
-  sessionDate: '2026-06-26',
-})
+const DEMO_MERGE_CONTEXT = buildDemoTemplateMergeContext()
 
 export default function ServiceLeadLetterTemplateEditor() {
   const { templateId } = useParams()
@@ -29,38 +25,42 @@ export default function ServiceLeadLetterTemplateEditor() {
   const [workplaceId, setWorkplaceId] = useState('')
   const [content, setContent] = useState('<p></p>')
   const [isActive, setIsActive] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [ready, setReady] = useState(isNew)
+  const [initialized, setInitialized] = useState(isNew)
+  const [errors, setErrors] = useState({})
 
-  const workplaces = useMemo(() => getAllWorkplaces(), [])
+  const { data: template, isError } = useLetterTemplateQuery(templateId, { enabled: !isNew })
+  const { data: workplaces = [] } = useOrgWorkplacesQuery()
+  const saveTemplate = useSaveLetterTemplateMutation()
   const clinicianProfile = session?.user?.id ? getProfile(session.user.id) : null
 
   useEffect(() => {
     if (isNew) {
-      setReady(true)
+      setInitialized(true)
       return
     }
-    const tpl = getLetterTemplate(templateId)
-    if (!tpl) {
-      navigate('/service-lead/letter-templates', { replace: true })
-      return
-    }
-    setName(tpl.name)
-    setDescription(tpl.description || '')
-    setWorkplaceId(tpl.workplace_id || '')
-    setContent(tpl.content)
-    setIsActive(tpl.is_active !== false)
-    setReady(true)
-  }, [templateId, isNew, navigate])
+    if (!template) return
+    setName(template.name)
+    setDescription(template.description || '')
+    setWorkplaceId(template.workplace_id || '')
+    setContent(template.content)
+    setIsActive(template.is_active !== false)
+    setInitialized(true)
+  }, [template, isNew])
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (!isNew && isError) {
+      navigate('/service-lead/letter-templates', { replace: true })
+    }
+  }, [isNew, isError, navigate])
+
+  const handleSave = async () => {
     if (!name.trim()) {
-      toast.error('Template name is required.')
+      setErrors({ name: 'Template name is required.' })
       return
     }
-    setSaving(true)
+    setErrors({})
     try {
-      const saved = saveLetterTemplate({
+      const saved = await saveTemplate.mutateAsync({
         id: isNew ? undefined : templateId,
         name,
         description,
@@ -69,31 +69,37 @@ export default function ServiceLeadLetterTemplateEditor() {
         is_active: isActive,
       })
       navigate(`/service-lead/letter-templates/${saved.id}`, { replace: true })
-    } finally {
-      setSaving(false)
+    } catch (err) {
+      toast.error(err.message)
     }
   }
 
-  if (!ready) return null
+  if (!initialized) return null
 
   return (
-    <div className="service-lead-panel">
-      <div className="service-lead-panel__header">
-        <div>
-          <h2>{isNew ? 'New letter template' : 'Edit letter template'}</h2>
-          <p className="text-muted text-small">Use merge fields for client details. Clinicians can start letters from these templates on client records.</p>
-        </div>
-        <div className="service-lead-panel__header-actions">
+    <OrgConfigBlock
+      blockId="org_letter_template_editor"
+      actions={(
+        <>
           <button type="button" className="secondary" onClick={() => navigate('/service-lead/letter-templates')}>Back</button>
-          <button type="button" className="primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save template'}</button>
-        </div>
-      </div>
-
+          <button type="button" className="primary" onClick={handleSave} disabled={saveTemplate.isPending}>
+            {saveTemplate.isPending ? 'Saving…' : 'Save template'}
+          </button>
+        </>
+      )}
+    >
       <div className="card mb-1">
         <div className="form-grid">
           <div className="form-group">
             <label>Template name</label>
-            <input className="paper-input" value={name} onChange={e => setName(e.target.value)} required />
+            <input
+              className="paper-input"
+              value={name}
+              onChange={e => { setName(e.target.value); setErrors(prev => (prev.name ? { ...prev, name: undefined } : prev)) }}
+              aria-invalid={!!errors.name}
+              required
+            />
+            {errors.name && <p className="mt-1 text-[0.8rem] text-secondary">{errors.name}</p>}
           </div>
           <div className="form-group">
             <label>Scope</label>
@@ -126,6 +132,6 @@ export default function ServiceLeadLetterTemplateEditor() {
         mergeContext={DEMO_MERGE_CONTEXT}
         clinicianProfile={clinicianProfile}
       />
-    </div>
+    </OrgConfigBlock>
   )
 }

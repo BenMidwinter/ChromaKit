@@ -7,6 +7,7 @@ import {
   getOrganisationWorkplaceContexts,
 } from './store'
 import { ROLES } from './permissions'
+import { workplaceQueryKeys } from './workplaceQueries'
 
 /**
  * Server-state facade. The store is still synchronous today, so the query
@@ -28,13 +29,14 @@ export const queryKeys = {
 
 /** Caseload for the active user/workplace/role, sourced from the query cache. */
 export function useClientsQuery({ userId, demoRole, activeWorkplaceId, myWorkplace }) {
+  const needsWorkplaceContext = demoRole !== ROLES.SERVICE_LEAD
   return useQuery({
     queryKey: queryKeys.clientList(userId, activeWorkplaceId, demoRole),
     queryFn: () =>
       demoRole === ROLES.SERVICE_LEAD
         ? getOrganisationClients()
         : getClientsForUser(userId, myWorkplace),
-    enabled: Boolean(userId),
+    enabled: Boolean(userId) && (!needsWorkplaceContext || Boolean(myWorkplace)),
     placeholderData: keepPreviousData,
   })
 }
@@ -67,6 +69,7 @@ export function useStoreRefreshers() {
   const refreshMemberships = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: queryKeys.workplaceContexts })
     queryClient.invalidateQueries({ queryKey: queryKeys.clients })
+    queryClient.invalidateQueries({ queryKey: workplaceQueryKeys.workplace })
   }, [queryClient])
 
   return { refreshClients, refreshMemberships }

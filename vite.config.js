@@ -4,6 +4,10 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    // Prefer .ts sources when both a shim .js and .ts exist (Phase A lib migration).
+    extensions: ['.ts', '.tsx', '.mts', '.mjs', '.js', '.jsx', '.json'],
+  },
   test: {
     environment: 'node',
     include: ['src/**/*.{test,spec}.{js,jsx}'],

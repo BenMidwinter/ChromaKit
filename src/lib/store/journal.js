@@ -1,4 +1,5 @@
 import { db, uid } from '../data/collections'
+import { parseOrThrow, journalEntryInputSchema } from '../schemas'
 
 export function getJournalEntries(userId) {
   return db.journalEntries
@@ -11,6 +12,7 @@ export function getJournalEntries(userId) {
 }
 
 export function saveJournalEntry(userId, payload) {
+  payload = parseOrThrow(journalEntryInputSchema, payload, 'Journal entry')
   const now = payload.date
   if (payload.id) {
     const idx = db.journalEntries.findIndex(e => e.id === payload.id && e.author_id === userId)

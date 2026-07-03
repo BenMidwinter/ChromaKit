@@ -4,6 +4,9 @@ import {
   clientInputSchema,
   appointmentInputSchema,
   progressNoteInputSchema,
+  journalEntryInputSchema,
+  clientClinicalDetailsSchema,
+  clinicalProfileInputSchema,
 } from './schemas'
 
 describe('parseOrThrow + clientInputSchema', () => {
@@ -60,5 +63,42 @@ describe('progressNoteInputSchema', () => {
   it('accepts an update by id', () => {
     const out = parseOrThrow(progressNoteInputSchema, { id: 'note-1', title: 'Edited' }, 'Progress note')
     expect(out.id).toBe('note-1')
+  })
+})
+
+describe('journalEntryInputSchema', () => {
+  it('accepts a valid journal entry', () => {
+    const out = parseOrThrow(journalEntryInputSchema, {
+      date: '2026-07-01',
+      time: '09:30',
+      somatic_state: 'Grounded',
+    }, 'Journal entry')
+    expect(out.date).toBe('2026-07-01')
+  })
+  it('rejects invalid somatic states', () => {
+    expect(() => parseOrThrow(journalEntryInputSchema, {
+      date: '2026-07-01',
+      somatic_state: 'wired',
+    }, 'Journal entry')).toThrow()
+  })
+})
+
+describe('clientClinicalDetailsSchema', () => {
+  it('trims optional clinical detail fields', () => {
+    const out = parseOrThrow(clientClinicalDetailsSchema, {
+      diagnosis: '  ASD  ',
+      school: ' Riverside ',
+    }, 'Clinical details')
+    expect(out.diagnosis).toBe('ASD')
+    expect(out.school).toBe('Riverside')
+  })
+})
+
+describe('clinicalProfileInputSchema', () => {
+  it('accepts partial profile updates', () => {
+    const out = parseOrThrow(clinicalProfileInputSchema, {
+      working_formulation: 'Anxiety linked to transitions',
+    }, 'Clinical profile')
+    expect(out.working_formulation).toContain('Anxiety')
   })
 })

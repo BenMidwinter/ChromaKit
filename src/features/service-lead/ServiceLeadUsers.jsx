@@ -1,24 +1,19 @@
-import { useState, useMemo } from 'react'
-import {
-  getAllClinicianProfiles,
-  addClinicianUser,
-  getAllWorkplaces,
-  getAllMemberships,
-} from '../../lib/store'
+import { useMemo, useState } from 'react'
+import { getAllMemberships } from '../../lib/store'
+import { useAddClinicianUserMutation, useOrgUsersQuery, useOrgWorkplacesQuery } from '../../lib/orgQueries'
+import OrgConfigBlock from './blocks/OrgConfigBlock'
 
 export default function ServiceLeadUsers() {
-  const [users, setUsers] = useState(() => getAllClinicianProfiles())
+  const { data: users = [] } = useOrgUsersQuery()
+  const { data: workplaces = [] } = useOrgWorkplacesQuery()
+  const addUser = useAddClinicianUserMutation()
   const [fullName, setFullName] = useState('')
   const [hcpcNumber, setHcpcNumber] = useState('')
   const [jobTitle, setJobTitle] = useState('Clinician')
   const [bio, setBio] = useState('')
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const workplaces = useMemo(() => getAllWorkplaces(), [users])
   const memberships = useMemo(() => getAllMemberships(), [users])
-
-  const refresh = () => setUsers(getAllClinicianProfiles())
 
   const workplaceLabelsForUser = (userId) => {
     const labels = memberships
@@ -31,12 +26,11 @@ export default function ServiceLeadUsers() {
     return labels.length ? labels.join(', ') : 'Not linked'
   }
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault()
     setError('')
-    setSaving(true)
     try {
-      addClinicianUser({
+      await addUser.mutateAsync({
         full_name: fullName,
         hcpc_number: hcpcNumber,
         job_title: jobTitle,
@@ -46,28 +40,16 @@ export default function ServiceLeadUsers() {
       setHcpcNumber('')
       setJobTitle('Clinician')
       setBio('')
-      refresh()
     } catch (err) {
       setError(err.message)
-    } finally {
-      setSaving(false)
     }
   }
 
   return (
-    <div className="service-lead-panel">
-      <header className="service-lead-panel__header">
-        <div>
-          <h2>Users</h2>
-          <p className="text-muted text-small">
-            Add clinician accounts to the organisation. They can search for a workplace and request to join — clinical leads approve membership.
-          </p>
-        </div>
-      </header>
-
-      <section className="service-lead-panel__section">
-        <h3 className="service-lead-panel__section-title">Add clinician</h3>
-        <form onSubmit={handleAdd} className="form-grid service-lead-panel__form">
+    <OrgConfigBlock blockId="org_users">
+      <div className="role-block__panel">
+        <h3 className="role-block__panel-title">Add clinician</h3>
+        <form onSubmit={handleAdd} className="form-grid role-block__form">
           <div className="form-group">
             <label>Full name</label>
             <input className="paper-input" value={fullName} onChange={e => setFullName(e.target.value)} required placeholder="e.g. Sam Rivera" />
@@ -86,13 +68,15 @@ export default function ServiceLeadUsers() {
           </div>
           {error && <p className="form-error" style={{ gridColumn: '1 / -1' }}>{error}</p>}
           <div className="form-actions" style={{ gridColumn: '1 / -1' }}>
-            <button type="submit" className="primary" disabled={saving}>{saving ? 'Adding…' : 'Add user'}</button>
+            <button type="submit" className="primary" disabled={addUser.isPending}>
+              {addUser.isPending ? 'Adding…' : 'Add user'}
+            </button>
           </div>
         </form>
-      </section>
+      </div>
 
-      <section className="service-lead-panel__section">
-        <h3 className="service-lead-panel__section-title">All users ({users.length})</h3>
+      <div className="role-block__panel">
+        <h3 className="role-block__panel-title">All users ({users.length})</h3>
         <div className="lead-table-wrap">
           <table className="lead-table">
             <thead>
@@ -110,7 +94,7 @@ export default function ServiceLeadUsers() {
             </tbody>
           </table>
         </div>
-      </section>
-    </div>
+      </div>
+    </OrgConfigBlock>
   )
 }

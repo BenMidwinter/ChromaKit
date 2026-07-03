@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import PageHeader from './PageHeader'
-import { ROLE_CAPABILITIES, DEMO_ROLE_OPTIONS } from '../lib/permissions'
+import { ROLE_CAPABILITIES, DEMO_ROLE_OPTIONS, ROLES } from '../lib/permissions'
+import { getPersonaForRole } from '../lib/demoPersonas'
+import { CLIENTS } from '../lib/mockData'
 
 export default function About() {
   const [activeTab, setActiveTab] = useState('overview')
@@ -74,10 +76,21 @@ export default function About() {
           <div className="card">
             <h3 className="card__title">Per-workplace roles</h3>
             <p className="text-muted">
-              A user may hold different roles at different workplaces. Use the workplace context selector on the
-              Workplace page to switch between Chroma Main HQ and Chroma East Hub. Ben is clinical lead at HQ but
-              clinician-only at East — toggle Clinician preview and switch to East to see assigned caseload only;
-              Taylor Brooks (assigned to Sam) is hidden while Morgan Reed remains visible.
+              {(() => {
+                const clinicalLead = getPersonaForRole(ROLES.CLINICAL_LEAD)
+                const clinician = getPersonaForRole(ROLES.CLINICIAN)
+                const leadClient = CLIENTS.find(c => c.id === 'client-5')
+                const clinicianClient = CLIENTS.find(c => c.id === 'client-6')
+                return (
+                  <>
+                    A user may hold different roles at different workplaces. Use the workplace context selector on the
+                    Workplace page to switch between Chroma Main HQ and Chroma East Hub. {clinicalLead?.name} is clinical
+                    lead at both sites — switch to {clinician?.name} (Clinician) to see assigned caseload only;{' '}
+                    {clinicianClient?.real_name} (assigned to {clinician?.name}) is hidden while {leadClient?.real_name}{' '}
+                    (on {clinicalLead?.name}&apos;s caseload) remains visible.
+                  </>
+                )
+              })()}
             </p>
           </div>
         </div>

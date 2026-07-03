@@ -1,23 +1,20 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getLetterTemplates } from '../../lib/store'
+import { useLetterTemplatesQuery } from '../../lib/orgQueries'
+import OrgConfigBlock from './blocks/OrgConfigBlock'
 
 export default function ServiceLeadLetterTemplates() {
   const navigate = useNavigate()
-  const [templates] = useState(() => getLetterTemplates())
+  const { data: templates = [] } = useLetterTemplatesQuery()
 
   return (
-    <div className="service-lead-panel">
-      <div className="service-lead-panel__header">
-        <div>
-          <h2>Letter templates</h2>
-          <p className="text-muted text-small">Reusable letter structures for GPs, schools, referrers, and discharge summaries.</p>
-        </div>
+    <OrgConfigBlock
+      blockId="org_letter_templates"
+      actions={(
         <button type="button" className="primary" onClick={() => navigate('/service-lead/letter-templates/new')}>
           + New template
         </button>
-      </div>
-
+      )}
+    >
       <div className="card">
         {templates.length === 0 ? (
           <div className="empty-state">No templates yet.</div>
@@ -41,6 +38,6 @@ export default function ServiceLeadLetterTemplates() {
           </div>
         )}
       </div>
-    </div>
+    </OrgConfigBlock>
   )
 }

@@ -1,48 +1,75 @@
 import { ROLES } from './permissions'
+import {
+  CLINICIAN_PROFILES,
+  CLIENTS,
+  DEMO_PERSONA_ACCOUNTS,
+  DEFAULT_DEMO_PERSONA_ID,
+} from './mockData'
+import { buildMergeContext } from './mergeFields'
+
+const PERSONA_ROLE_BY_ID = {
+  ben: ROLES.CLINICAL_LEAD,
+  sarah: ROLES.CLINICIAN,
+  daniel: ROLES.SERVICE_LEAD,
+  alex: ROLES.ADMINISTRATOR,
+}
+
+const PERSONA_LABEL_BY_ID = {
+  ben: 'Clinical Lead',
+  sarah: 'Clinician',
+  daniel: 'Service Lead',
+  alex: 'Administrator',
+}
 
 /** Named demo identities — drives role switcher & calendar permissions. */
-export const DEMO_PERSONAS = [
-  {
-    id: 'daniel',
-    name: 'Daniel',
-    role: ROLES.CLINICAL_LEAD,
-    userId: 'user-daniel',
-    jobTitle: 'Clinical Lead · Music Therapist',
-    label: 'Clinical Lead',
-  },
-  {
-    id: 'sarah',
-    name: 'Sarah',
-    role: ROLES.CLINICIAN,
-    userId: 'user-sarah',
-    jobTitle: 'Clinician · Art Therapist',
-    label: 'Clinician',
-  },
-  {
-    id: 'ben',
-    name: 'Ben',
-    role: ROLES.SERVICE_LEAD,
-    userId: 'user-ben',
-    jobTitle: 'Service Lead · Organisation Admin',
-    label: 'Service Lead',
-  },
-  {
-    id: 'alex',
-    name: 'Alex',
-    role: ROLES.ADMINISTRATOR,
-    userId: 'user-alex',
-    jobTitle: 'Administrator · Operations',
-    label: 'Administrator',
-  },
-]
+export const DEMO_PERSONAS = Object.entries(DEMO_PERSONA_ACCOUNTS).map(([id, account]) => {
+  const profile = CLINICIAN_PROFILES.find(p => p.id === account.userId)
+  return {
+    id,
+    name: account.name,
+    role: PERSONA_ROLE_BY_ID[id],
+    userId: account.userId,
+    jobTitle: profile?.job_title || account.name,
+    label: PERSONA_LABEL_BY_ID[id],
+    serviceLead: account.serviceLead,
+  }
+})
 
-export const DEFAULT_PERSONA_ID = 'daniel'
+export const DEFAULT_PERSONA_ID = DEFAULT_DEMO_PERSONA_ID
 
 export function getPersonaById(personaId) {
   return DEMO_PERSONAS.find(p => p.id === personaId) || DEMO_PERSONAS[0]
 }
 
-/** Service Lead (Ben) — privacy mask on client-identifying fields. */
+export function getPersonaForRole(role) {
+  return DEMO_PERSONAS.find(p => p.role === role) || null
+}
+
+export function getProfileForPersona(persona) {
+  if (!persona) return null
+  return CLINICIAN_PROFILES.find(p => p.id === persona.userId) || null
+}
+
+/** Shared merge-field preview context for template editors (clinical lead + demo client). */
+export function buildDemoTemplateMergeContext() {
+  const clinicalLead = getPersonaForRole(ROLES.CLINICAL_LEAD)
+  const profile = getProfileForPersona(clinicalLead)
+  const client = CLIENTS.find(c => c.id === 'client-1')
+  return buildMergeContext({
+    client: client ? { real_name: client.real_name, dob: client.dob } : undefined,
+    appointment: { appointment_type: 'one_to_one', location: 'Oak Academy — music room' },
+    profile: profile
+      ? {
+          full_name: profile.full_name,
+          job_title: profile.job_title,
+          hcpc_number: profile.hcpc_number,
+        }
+      : null,
+    sessionDate: '2026-06-26',
+  })
+}
+
+/** Service Lead persona — privacy mask on client-identifying fields. */
 export function shouldBlurClientIdentity(persona) {
   return persona?.role === ROLES.SERVICE_LEAD
 }

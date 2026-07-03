@@ -2,21 +2,21 @@ import { Routes, Route, Navigate, useNavigate, useParams, useOutletContext, Outl
 
 import AppLayout from './components/AppLayout'
 import Home from './components/Home'
-import Calendar from './components/Calendar'
+import Calendar from './features/calendar/CalendarPage'
 import ActiveCases from './components/ActiveCases'
 import AllClients from './components/AllClients'
 import AddClient from './components/AddClient'
-import PatientProfile from './components/PatientProfile'
-import ClientPanelEmpty from './components/ClientPanelEmpty'
-import ProgressNotesPage from './components/ProgressNotesPage'
-import ProgressNotesRedirect from './components/ProgressNotesRedirect'
-import WorkingDocumentsPanel from './components/WorkingDocumentsPanel'
-import LettersPanel from './components/LettersPanel'
-import CaseHistoryPanel from './components/CaseHistoryPanel'
+import PatientProfile from './features/client/PatientProfile'
+import ClientPanelEmpty from './features/client/ClientPanelEmpty'
+import ProgressNotesPage from './features/client/ProgressNotesPage'
+import ProgressNotesRedirect from './features/client/ProgressNotesRedirect'
+import WorkingDocumentsPanel from './features/client/WorkingDocumentsPanel'
+import LettersPanel from './features/client/LettersPanel'
+import CaseHistoryPanel from './features/client/CaseHistoryPanel'
 import UpcomingAppointments from './components/UpcomingAppointments'
-import ClientAppointmentsIndex from './components/ClientAppointmentsIndex'
-import AppointmentEditor from './components/AppointmentEditor'
-import ClientSectionPlaceholder from './components/ClientSectionPlaceholder'
+import ClientAppointmentsIndex from './features/client/ClientAppointmentsIndex'
+import AppointmentEditor from './features/client/AppointmentEditor'
+import ClientSectionPlaceholder from './features/client/ClientSectionPlaceholder'
 import Workplace from './components/Workplace'
 import WorkplaceTeamMember from './components/WorkplaceTeamMember'
 import ProfileLayout from './components/profile/ProfileLayout'
@@ -34,7 +34,7 @@ import ServiceLeadOutcomeForms from './features/service-lead/ServiceLeadOutcomeF
 import ServiceLeadServices from './features/service-lead/ServiceLeadServices'
 import ServiceLeadOverview from './features/service-lead/ServiceLeadOverview'
 import ServiceLeadUsers from './features/service-lead/ServiceLeadUsers'
-import NotesHistoryPanel from './components/NotesHistoryPanel'
+import NotesHistoryPanel from './features/client/NotesHistoryPanel'
 import Reporting from './components/Reporting'
 
 export default function App() {
@@ -193,6 +193,5 @@ function LegacyNoteRedirect() {
 }
 
 function WorkplaceWrapper() {
-  const navigate = useNavigate()
-  return <Workplace onViewProfile={(client) => navigate(`/clients/${client.id}`)} />
+  return <Workplace />
 }

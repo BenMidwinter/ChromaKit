@@ -737,6 +737,8 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   align-items: stretch;
+  flex: 1;
+  min-height: 0;
   min-width: 0;
   transition: grid-template-columns var(--layout-transition-pane);
 }
@@ -746,7 +748,10 @@
 }
 
 .ck-calendar-frame__grid {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  min-height: 0;
   transition: opacity var(--layout-transition-fast);
 }
 
@@ -997,13 +1002,15 @@
   .ck-split--pane-lg.ck-split--pane-open,
   .ck-calendar-frame--pane-open {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
   }
 
   .ck-split__accessory,
   .ck-calendar-frame__accessory {
     border-left: none;
     border-top: 1px solid var(--border-light);
-    max-height: min(70vh, 520px);
+    max-height: min(45dvh, 420px);
+    max-height: min(45vh, 420px);
   }
 
   .ck-sticky-bar--sub {

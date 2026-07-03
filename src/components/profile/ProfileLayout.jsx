@@ -9,15 +9,17 @@ export default function ProfileLayout() {
       <PageHeader
         title="Profile"
         subtitle="Clinician settings, workplace membership, and reflective journal."
+        toolbar={(
+          <nav className="profile-actions profile-actions--inline" aria-label="Profile sections">
+            <NavLink to="/profile" end className="profile-actions__link">
+              Clinician details
+            </NavLink>
+            <NavLink to="/profile/journal" className="profile-actions__link">
+              Journal
+            </NavLink>
+          </nav>
+        )}
       />
-      <nav className="profile-actions" aria-label="Profile sections">
-        <NavLink to="/profile" end className="profile-actions__link">
-          Clinician details
-        </NavLink>
-        <NavLink to="/profile/journal" className="profile-actions__link">
-          Journal
-        </NavLink>
-      </nav>
       <Outlet context={parentContext} />
     </div>
   )

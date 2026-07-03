@@ -30,6 +30,7 @@ import {
   IconAudioWave,
   IconHeading,
 } from './EditorToolbarIcons'
+import ErrorBoundary from './ErrorBoundary'
 
 function ToolbarDivider() {
   return <span className="doc-editor__divider" aria-hidden />
@@ -447,7 +448,7 @@ function DocToolbar({
  * One editor instance per React `key` on this component.
  * Parent must change `key` when switching documents — do not change `content` alone.
  */
-export default function RichTextEditor({
+function RichTextEditorSurface({
   content,
   onChange,
   editable = true,
@@ -711,5 +712,23 @@ export default function RichTextEditor({
         </div>
       </div>
     </div>
+  )
+}
+
+function RichTextEditorFallback({ reset }) {
+  return (
+    <div className="rounded border border-line bg-surface p-4 text-sm" role="alert">
+      <p><strong>Editor unavailable.</strong></p>
+      <p className="text-subtle">The rest of this page is still usable.</p>
+      <button type="button" className="primary mt-3" onClick={reset}>Reload editor</button>
+    </div>
+  )
+}
+
+export default function RichTextEditor(props) {
+  return (
+    <ErrorBoundary label="rich-text-editor" fallback={RichTextEditorFallback}>
+      <RichTextEditorSurface {...props} />
+    </ErrorBoundary>
   )
 }
