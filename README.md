@@ -1,16 +1,114 @@
-# React + Vite
+# ChromaKit
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Clinical practice management for creative arts therapies — client records, scheduling, progress notes, letters, and organisation administration in a single workspace.
 
-Currently, two official plugins are available:
+**Status:** Early prototype (v0.1.0). Frontend-only with in-memory seed data; no backend or authentication yet.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+### Clinician workspace
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Home dashboard, calendar, and upcoming appointments
+- Client list, intake, and patient profiles
+- Appointment booking and session management
+- Progress notes with TipTap rich-text editing
+- Letters, case history, working documents, and clinical insights
+- Body map and expressive colour wheel tooling
+- Multi-workplace context switching
 
-## Expanding the ESLint configuration
+### Service Lead / organisation admin
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Workplace, user, and service management (`/service-lead/*`)
+- Note, letter, and outcome form templates
+- Role-based access with privacy masking for aggregate views
+
+### Platform
+
+- Demo persona switcher (Clinical Lead, Clinician, Service Lead, Administrator)
+- Light Chroma and Dark Studio themes
+- Toast and dialog UX (no native browser alerts)
+- Zod validation at data-write boundaries
+- 83 unit tests on pure `lib/` logic
+
+## Tech stack
+
+| Layer | Choice |
+| --- | --- |
+| UI | React 19, React Router 7 |
+| Build | Vite (rolldown) |
+| Styling | Tailwind CSS 4 + design-token bridge |
+| Data | TanStack Query (clients/workplaces), in-memory store |
+| Editors | TipTap, React Flow (`@xyflow/react`) |
+| Validation | Zod |
+| Tests | Vitest |
+
+## Getting started
+
+**Prerequisites:** Node.js 20+ and npm
+
+```bash
+git clone https://github.com/BenMidwinter/ChromaKit.git
+cd ChromaKit
+npm install
+npm run dev
+```
+
+Open the URL Vite prints (typically `http://localhost:5173`).
+
+### Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start dev server with HMR |
+| `npm run build` | Production build to `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm test` | Run Vitest unit tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run typecheck` | TypeScript check on `.ts` files |
+| `npm run lint` | ESLint |
+
+## Demo personas
+
+Use the profile switcher in the app header to explore role-specific behaviour:
+
+| Persona | Role | Good for testing |
+| --- | --- | --- |
+| **Daniel** | Clinical Lead | Client add/edit, appointments, home dashboard |
+| **Sarah** | Clinician | Day-to-day clinical workflows |
+| **Ben** | Service Lead | `/service-lead/*` admin screens, blurred client identity |
+| **Alex** | Administrator | Operations and workplace views |
+
+## Project structure
+
+```
+src/
+├── components/          # Shared UI and clinical screens
+├── features/
+│   └── service-lead/    # Organisation admin (feature-folder pilot)
+├── lib/
+│   ├── data/            # Collection accessors
+│   ├── store/           # Domain mutations (clients, scheduling, docs…)
+│   ├── mockData.js      # Seed data — replace with a backend when ready
+│   └── *.ts / *.js      # Headless logic + unit tests
+├── styles/              # CSS partials and design tokens
+├── App.jsx              # Route definitions
+└── main.jsx             # App shell, QueryClient, providers
+```
+
+## Architecture
+
+ChromaKit is being incrementally refactored toward four design pillars: feature encapsulation, unidirectional data flow, headless core logic, and defensive boundaries.
+
+See **[ARCHITECTURE.md](./ARCHITECTURE.md)** for the rollout checklist, completed vertical slices, and the current Phase A execution plan.
+
+## Deployment
+
+Configured for [Vercel](https://vercel.com) as a static SPA (`vercel.json` rewrites all routes to `index.html`). The site is set to `noindex` until ready for public launch.
+
+```bash
+npm run build
+```
+
+## License
+
+Private — all rights reserved.
