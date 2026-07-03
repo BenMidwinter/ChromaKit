@@ -3,14 +3,16 @@ import { useNavigate, useParams, useOutletContext } from 'react-router-dom'
 import { useClientSession } from '../../lib/useClientSession'
 import { usePermissions } from '../../lib/usePermissions'
 import {
-  getAppointment,
   getEpisodes,
   getProgressNoteByAppointment,
-  saveAppointment,
   getWorkplaceClinicians,
   getProfile,
   APPOINTMENT_TYPES,
 } from '../../lib/store'
+import {
+  useAppointmentQuery,
+  useSaveAppointmentMutation,
+} from '../../lib/appointmentQueries'
 import {
   appointmentSchedule,
   appointmentDurationMinutes,
@@ -42,6 +44,8 @@ export default function AppointmentEditor() {
   const perms = usePermissions(client)
   const toast = useToast()
   const isNew = appointmentId === 'new'
+  const appointmentQuery = useAppointmentQuery(appointmentId, { enabled: !isNew })
+  const saveAppointmentMutation = useSaveAppointmentMutation()
 
   const episodes = useMemo(() => getEpisodes(clientId), [clientId])
   const base = `/clients/${clientId}/appointments`
@@ -90,23 +94,22 @@ export default function AppointmentEditor() {
       }
       return
     }
-    const appt = getAppointment(appointmentId)
-    if (appt) {
-      const sched = appointmentSchedule(appt)
-      const dur = appointmentDurationMinutes(appt)
-      setSessionDate(sched.session_date)
-      setStartTime(appt.start_time || sched.start_time || '09:00')
-      setEndTime(appt.end_time || addMinutesToTime(appt.start_time || '09:00', dur))
-      setDurationStr(String(dur))
-      setAppointmentType(appt.appointment_type)
-      setEpisodeId(appt.episode_id || '')
-      setLocation(appt.location || '')
-      setAttendanceStatus(appt.attendance_status)
-      setActiveId(appt.id)
-      setClinicianId(appt.clinician_id || session?.user?.id || '')
-      setLinkedNote(getProgressNoteByAppointment(appt.id))
-    }
-  }, [appointmentId, isNew, clientId, canPickClinician, client?.user_id, client?.workplace_id, session?.user?.id])
+    const appt = appointmentQuery.data
+    if (!appt) return
+    const sched = appointmentSchedule(appt)
+    const dur = appointmentDurationMinutes(appt)
+    setSessionDate(sched.session_date)
+    setStartTime(appt.start_time || sched.start_time || '09:00')
+    setEndTime(appt.end_time || addMinutesToTime(appt.start_time || '09:00', dur))
+    setDurationStr(String(dur))
+    setAppointmentType(appt.appointment_type)
+    setEpisodeId(appt.episode_id || '')
+    setLocation(appt.location || '')
+    setAttendanceStatus(appt.attendance_status)
+    setActiveId(appt.id)
+    setClinicianId(appt.clinician_id || session?.user?.id || '')
+    setLinkedNote(getProgressNoteByAppointment(appt.id))
+  }, [appointmentId, isNew, appointmentQuery.data, clientId, canPickClinician, client?.user_id, client?.workplace_id, session?.user?.id, episodes])
 
   useEffect(() => {
     if (activeId) {
@@ -144,21 +147,24 @@ export default function AppointmentEditor() {
   const computedDuration = Math.max(0, parseMinutes(endTime) - parseMinutes(startTime))
   const finalDuration = computedDuration > 0 ? computedDuration : durationMinutes
 
-  const persistAppointment = () => {
-    const saved = saveAppointment({
-      id: activeId || undefined,
-      client_id: clientId,
-      episode_id: episodeId || null,
-      clinician_id: clinicianId || session.user.id,
-      session_date: sessionDate,
-      start_time: startTime,
-      end_time: addMinutesToTime(startTime, finalDuration),
-      duration_minutes: finalDuration,
-      scheduled_at: `${sessionDate}T${startTime}:00`,
-      appointment_type: appointmentType,
-      attendance_status: attendanceStatus,
-      location,
-    }, session.user.id)
+  const persistAppointment = async () => {
+    const saved = await saveAppointmentMutation.mutateAsync({
+      payload: {
+        id: activeId || undefined,
+        client_id: clientId,
+        episode_id: episodeId || null,
+        clinician_id: clinicianId || session.user.id,
+        session_date: sessionDate,
+        start_time: startTime,
+        end_time: addMinutesToTime(startTime, finalDuration),
+        duration_minutes: finalDuration,
+        scheduled_at: `${sessionDate}T${startTime}:00`,
+        appointment_type: appointmentType,
+        attendance_status: attendanceStatus,
+        location,
+      },
+      userId: session.user.id,
+    })
     setActiveId(saved.id)
     setEndTime(saved.end_time || addMinutesToTime(saved.start_time, finalDuration))
     if (!isNew && appointmentId !== saved.id) {
@@ -167,7 +173,7 @@ export default function AppointmentEditor() {
     return saved
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!session?.user?.id) {
       toast.error('Session unavailable — please refresh the page.')
       return
@@ -182,18 +188,18 @@ export default function AppointmentEditor() {
     setErrors({})
     setSaving(true)
     try {
-      persistAppointment()
+      await persistAppointment()
     } finally {
       setSaving(false)
     }
   }
 
-  const handleProgressNote = () => {
+  const handleProgressNote = async () => {
     if (!session?.user?.id || !perms.canWriteProgressNotes) return
 
     setSaving(true)
     try {
-      const saved = persistAppointment()
+      const saved = await persistAppointment()
       const existing = getProgressNoteByAppointment(saved.id)
       if (existing) {
         navigate(`${notesBase}/${existing.id}`)

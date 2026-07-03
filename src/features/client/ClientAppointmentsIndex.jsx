@@ -1,10 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  getAppointmentsForClient,
-  getProfile,
-  getProgressNoteByAppointment,
-} from '../../lib/store'
+import { getProfile, getProgressNoteByAppointment } from '../../lib/store'
+import { useClientAppointmentsQuery } from '../../lib/appointmentQueries'
 import { modalityLabel } from '../../lib/calendarConstants'
 import {
   formatSessionDateTime,
@@ -25,7 +22,7 @@ const APPT_COLUMNS = [
 export default function ClientAppointmentsIndex() {
   const { id: clientId } = useParams()
   const navigate = useNavigate()
-  const appointments = getAppointmentsForClient(clientId)
+  const { data: appointments = [] } = useClientAppointmentsQuery(clientId)
 
   const rows = useMemo(() => {
     const sorted = [...appointments].sort((a, b) => {

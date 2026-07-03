@@ -1,7 +1,11 @@
 import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useOutletContext } from 'react-router-dom'
-import { getAllAppointments, saveAppointment, getClientsForUser } from '../lib/store'
+import { getClientsForUser } from '../lib/store'
+import {
+  useAllAppointmentsQuery,
+  useSaveAppointmentMutation,
+} from '../lib/appointmentQueries'
 import {
   DEMO_TODAY,
   addDaysYmd,
@@ -657,13 +661,10 @@ export default function CalendarModule({ persona }) {
   const [selectedAppointment, setSelectedAppointment] = useState(null)
   const [scheduleDraft, setScheduleDraft] = useState(null)
   const [scheduleSaving, setScheduleSaving] = useState(false)
-  const [appointments, setAppointments] = useState(() => getAllAppointments())
+  const { data: appointments = [] } = useAllAppointmentsQuery()
+  const saveAppointmentMutation = useSaveAppointmentMutation()
   const [viewPrefs, setViewPrefs] = useState(() => getCalendarViewPreferences())
   const [viewOptionsOpen, setViewOptionsOpen] = useState(false)
-
-  const reloadAppointments = useCallback(() => {
-    setAppointments(getAllAppointments())
-  }, [])
 
   const ownerOptions = useMemo(
     () => getCalendarOwnerOptions(persona, myWorkplace),
@@ -754,21 +755,23 @@ export default function CalendarModule({ persona }) {
     setViewPrefs(prev => saveCalendarViewPreferences({ ...prev, ...patch }))
   }
 
-  const handleAttendanceChange = (status) => {
+  const handleAttendanceChange = async (status) => {
     if (!selectedAppointment) return
-    const saved = saveAppointment({
-      id: selectedAppointment.id,
-      client_id: selectedAppointment.client_id,
-      session_date: selectedAppointment.session_date,
-      start_time: selectedAppointment.start_time,
-      end_time: selectedAppointment.end_time,
-      appointment_type: selectedAppointment.appointment_type,
-      therapy_modality: selectedAppointment.therapy_modality,
-      location: selectedAppointment.location,
-      attendance_status: status,
-    }, session.user.id)
+    const saved = await saveAppointmentMutation.mutateAsync({
+      payload: {
+        id: selectedAppointment.id,
+        client_id: selectedAppointment.client_id,
+        session_date: selectedAppointment.session_date,
+        start_time: selectedAppointment.start_time,
+        end_time: selectedAppointment.end_time,
+        appointment_type: selectedAppointment.appointment_type,
+        therapy_modality: selectedAppointment.therapy_modality,
+        location: selectedAppointment.location,
+        attendance_status: status,
+      },
+      userId: session.user.id,
+    })
     setSelectedAppointment(saved)
-    reloadAppointments()
   }
 
   const handleScheduleSave = async (payload) => {
@@ -777,15 +780,17 @@ export default function CalendarModule({ persona }) {
       const dates = payload.dates?.length ? payload.dates : [payload.session_date]
       let last = null
       for (const date of dates) {
-        last = saveAppointment({
-          ...payload,
-          session_date: date,
-          dates: undefined,
-          clinician_id: session.user.id,
-        }, session.user.id)
+        last = await saveAppointmentMutation.mutateAsync({
+          payload: {
+            ...payload,
+            session_date: date,
+            dates: undefined,
+            clinician_id: session.user.id,
+          },
+          userId: session.user.id,
+        })
       }
       setScheduleDraft(null)
-      reloadAppointments()
       if (last) {
         setActiveDate(last.session_date)
         if (viewMode === 'month') setViewMode('day')
@@ -801,20 +806,22 @@ export default function CalendarModule({ persona }) {
     try {
       let last = null
       for (const date of payload.dates) {
-        last = saveAppointment({
-          client_id: payload.client_id,
-          session_date: date,
-          start_time: payload.start_time,
-          end_time: payload.end_time,
-          duration_minutes: payload.duration_minutes,
-          therapy_modality: payload.therapy_modality,
-          location: payload.location,
-          appointment_type: payload.appointment_type,
-          clinician_id: session.user.id,
-        }, session.user.id)
+        last = await saveAppointmentMutation.mutateAsync({
+          payload: {
+            client_id: payload.client_id,
+            session_date: date,
+            start_time: payload.start_time,
+            end_time: payload.end_time,
+            duration_minutes: payload.duration_minutes,
+            therapy_modality: payload.therapy_modality,
+            location: payload.location,
+            appointment_type: payload.appointment_type,
+            clinician_id: session.user.id,
+          },
+          userId: session.user.id,
+        })
       }
       setScheduleDraft(null)
-      reloadAppointments()
       if (last) {
         setActiveDate(last.session_date)
         if (viewMode === 'month') setViewMode('day')

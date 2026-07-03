@@ -1,6 +1,7 @@
 import { Link, useOutletContext } from 'react-router-dom'
 import PageHeader from './PageHeader'
-import { getUpcomingAppointments, APPOINTMENT_TYPES } from '../lib/store'
+import { APPOINTMENT_TYPES } from '../lib/store'
+import { useUpcomingAppointmentsQuery } from '../lib/appointmentQueries'
 import {
   groupAppointmentsForAgenda,
   formatAppointmentTime,
@@ -71,7 +72,9 @@ function LaterGroup({ items, clientName, blurNames }) {
 export default function UpcomingAppointments() {
   const { session, myWorkplace, clients } = useOutletContext()
   const perms = usePermissions()
-  const upcoming = getUpcomingAppointments(session.user.id, myWorkplace, {
+  const { data: upcoming = [] } = useUpcomingAppointmentsQuery({
+    userId: session.user.id,
+    myWorkplace,
     organisationWide: perms.isServiceLeadView,
   })
   const sections = groupAppointmentsForAgenda(upcoming)

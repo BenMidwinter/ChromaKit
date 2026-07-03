@@ -60,8 +60,8 @@ Status key: `[x]` done · `[~]` partial · `[ ]` not started
 
 ### Pillar 2 — Unidirectional data flow
 
-- [~] TanStack Query — **clients + workplace contexts** in `AppLayout`; **org config + overview** in `orgQueries.js`
-- [ ] Query slice: appointments (`CalendarModule`, `ClientAppointmentsIndex`, `UpcomingAppointments`)
+- [~] TanStack Query — **clients + workplace contexts** in `AppLayout`; **org config + overview** in `orgQueries.js`; **appointments** in `appointmentQueries.js`
+- [x] Query slice: appointments (`CalendarModule`, `ClientAppointmentsIndex`, `UpcomingAppointments`, `AppointmentEditor`)
 - [ ] Query slice: progress notes (`ProgressNotesPage`, `NotesHistoryPanel`)
 - [ ] Query slice: workplace / team (`Workplace`, `WorkplaceTeamMember`)
 - [ ] Audit Outlet context — remove redundant props as hooks replace them (per domain, not big-bang)
@@ -166,7 +166,7 @@ npm run lint        # optional; fix only new issues in touched files
 | Phase | Focus |
 | --- | --- |
 | **B** | Feature folders (`features/client/` first) |
-| **C** | TanStack Query (`useAppointmentsQuery` vertical slice) |
+| **C** | TanStack Query (`appointmentQueries.js` — calendar, client list, upcoming, editor) |
 | **D** | Tailwind on shared shells + client workspace |
 | **E** | Remaining Zod writes, error boundaries, store tests |
 
