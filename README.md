@@ -118,11 +118,27 @@ See **[ARCHITECTURE.md](./ARCHITECTURE.md)** for the rollout checklist, complete
 
 ## Deployment
 
-Configured for [Vercel](https://vercel.com) as a static SPA (`vercel.json` rewrites all routes to `index.html`). The site is set to `noindex` until ready for public launch.
+### GitHub Pages
+
+Production builds deploy automatically to GitHub Pages on every push to `main` (workflow: `.github/workflows/deploy-pages.yml`).
+
+**Live URL:** https://benmidwinter.github.io/ChromaKit/
+
+**One-time setup** (if Pages is not already wired to Actions):
+
+1. Repo → **Settings** → **Pages**
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**
+
+After that, push to `main` (or run **Actions → Deploy to GitHub Pages → Run workflow**). The site root is `/ChromaKit/`; Vite `base` and React Router `basename` are set only for that Pages build (`GITHUB_PAGES=1`).
+
+### Local production build
 
 ```bash
 npm run build
+npm run preview
 ```
+
+Also configured for [Vercel](https://vercel.com) as a static SPA (`vercel.json` rewrites all routes to `index.html`).
 
 ## License
 
