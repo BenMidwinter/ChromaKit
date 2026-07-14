@@ -124,12 +124,13 @@ Production builds deploy automatically to GitHub Pages on every push to `main` (
 
 **Live URL:** https://benmidwinter.github.io/ChromaKit/
 
-**One-time setup** (if Pages is not already wired to Actions):
+**One-time setup** (if Pages is not already on the `gh-pages` branch):
 
 1. Repo → **Settings** → **Pages**
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**
+2. Under **Build and deployment**, set **Source** to **Deploy from a branch**
+3. Branch: **`gh-pages`** / **`/`** (root) → Save
 
-After that, push to `main` (or run **Actions → Deploy to GitHub Pages → Run workflow**). The site root is `/ChromaKit/`; Vite `base` and React Router `basename` are set only for that Pages build (`GITHUB_PAGES=1`).
+After that, every push to `main` builds the Vite production bundle and publishes it to `gh-pages`. The site root is `/ChromaKit/`; Vite `base` and React Router `basename` are set only for that Pages build (`GITHUB_PAGES=1`).
 
 ### Local production build
 
