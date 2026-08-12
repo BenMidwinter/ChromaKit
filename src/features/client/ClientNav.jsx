@@ -25,6 +25,7 @@ const NAV_SECTIONS = [
       { segment: 'forms', label: 'Forms', section: 'forms' },
       { segment: 'contacts', label: 'Contacts', section: 'contacts' },
       { segment: 'outcomes', label: 'Outcome measures', section: 'outcomes' },
+      { segment: 'safeguarding', label: 'Safeguarding', section: 'safeguarding' },
     ],
   },
 ]

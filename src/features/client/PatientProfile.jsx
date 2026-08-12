@@ -6,10 +6,12 @@ import BodyMap from './BodyMap'
 import ClientDetailsBar from './ClientDetailsBar'
 import ClientNav from './ClientNav'
 import ClientClinicalAlerts from './ClientClinicalAlerts'
+import SafeguardingConcernModal from './SafeguardingConcernModal'
 import BlurredName from '../../components/BlurredName'
 import ErrorBoundary from '../../components/ErrorBoundary'
 import { usePermissions } from '../../lib/usePermissions'
 import { shouldBlurClientIdentity } from '../../lib/demoPersonas'
+import { getSafeguardingAlerts } from '../../lib/safeguardingConcerns'
 
 export default function PatientProfile({ client: initialClient }) {
   const navigate = useNavigate()
@@ -17,6 +19,7 @@ export default function PatientProfile({ client: initialClient }) {
   const { clients } = useAppClients()
   const [client, setClient] = useState(initialClient)
   const [showBodyMap, setShowBodyMap] = useState(false)
+  const [showSafeguarding, setShowSafeguarding] = useState(false)
   const perms = usePermissions(client)
   const blurNames = shouldBlurClientIdentity(activePersona)
 
@@ -37,6 +40,8 @@ export default function PatientProfile({ client: initialClient }) {
     ? ' · Assigned to another clinician'
     : ''
 
+  const openConcernCount = getSafeguardingAlerts(client.id).length
+
   return (
     <div className="page page--client">
       <header className="flex flex-wrap items-stretch border-b-2 border-primary bg-surface">
@@ -56,6 +61,13 @@ export default function PatientProfile({ client: initialClient }) {
         />
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5 px-3.5 py-2">
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => setShowSafeguarding(true)}
+          >
+            Report safeguarding{openConcernCount > 0 ? ` (${openConcernCount} open)` : ''}
+          </button>
           {perms.canUseBodyMap && (
             <button type="button" className="secondary" onClick={() => setShowBodyMap(true)}>Body map</button>
           )}
@@ -76,6 +88,13 @@ export default function PatientProfile({ client: initialClient }) {
         <ErrorBoundary label="body-map">
           <BodyMap client={client} onClose={() => setShowBodyMap(false)} />
         </ErrorBoundary>
+      )}
+
+      {showSafeguarding && (
+        <SafeguardingConcernModal
+          client={client}
+          onClose={() => setShowSafeguarding(false)}
+        />
       )}
     </div>
   )

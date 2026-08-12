@@ -14,6 +14,8 @@ import {
   canAccessClientNavSection,
   workplaceRoleForDemo,
   buildPermissions,
+  canAccessFinanceArea,
+  canCloseSafeguardingConcern,
 } from './permissions'
 
 const leadCtx = { id: 'wp1', effectiveRole: ROLES.CLINICAL_LEAD }
@@ -135,5 +137,21 @@ describe('buildPermissions', () => {
     const perms = buildPermissions(adminCtx, wpClientOther, 'u1')
     expect(perms.canWriteProgressNotes).toBe(false)
     expect(perms.canViewFullCaseload).toBe(true)
+  })
+})
+
+describe('finance and safeguarding permissions', () => {
+  it('limits finance to admin, clinical lead, and service lead', () => {
+    expect(canAccessFinanceArea(ROLES.ADMINISTRATOR)).toBe(true)
+    expect(canAccessFinanceArea(ROLES.CLINICAL_LEAD)).toBe(true)
+    expect(canAccessFinanceArea(ROLES.SERVICE_LEAD)).toBe(true)
+    expect(canAccessFinanceArea(ROLES.CLINICIAN)).toBe(false)
+  })
+
+  it('only clinical lead or service lead can close safeguarding', () => {
+    expect(canCloseSafeguardingConcern(leadCtx)).toBe(true)
+    expect(canCloseSafeguardingConcern(adminCtx)).toBe(false)
+    expect(canCloseSafeguardingConcern(clinicianCtx)).toBe(false)
+    expect(canCloseSafeguardingConcern(clinicianCtx, ROLES.SERVICE_LEAD)).toBe(true)
   })
 })

@@ -288,7 +288,8 @@
     gap: 1.5rem;
   }
 
-  .role-block__columns {
+  .role-block__columns,
+  .role-block__columns--three {
     grid-template-columns: 1fr;
   }
 
@@ -324,7 +325,8 @@
   border-left: 4px solid var(--col-primary);
 }
 
-.role-block--administrator {
+.role-block--administrator,
+.role-block--admin_finance {
   border-left: 4px solid #8b7cb8;
 }
 
@@ -572,7 +574,8 @@
   border-radius: 999px;
 }
 
-.role-block--administrator .role-block__badge {
+.role-block--administrator .role-block__badge,
+.role-block--admin_finance .role-block__badge {
   color: #4a3f66;
   background: #ece8f5;
 }
@@ -692,6 +695,193 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem 1.5rem;
+}
+
+.role-block__columns--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.role-block__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #4a3f66;
+  background: #ece8f5;
+  border: 1px solid #cfc6e4;
+}
+
+.role-block__footnote {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--txt-muted);
+  line-height: 1.4;
+}
+
+.home-feed__row--static {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0;
+}
+
+.home-feed__ref {
+  font-weight: 500;
+  color: var(--txt-muted);
+}
+
+.finance-status {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 0.2rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-radius: 999px;
+}
+
+.finance-status--draft {
+  color: #5a5248;
+  background: #efeae2;
+}
+
+.finance-status--submitted,
+.finance-status--ready {
+  color: #6b4a12;
+  background: #f5e6c8;
+}
+
+.finance-status--pending {
+  color: #7a4a18;
+  background: #f7e4d0;
+}
+
+.finance-status--approved,
+.finance-status--sent,
+.finance-status--paid {
+  color: #2d6b4a;
+  background: #dcefe4;
+}
+
+.finance-status--rejected {
+  color: #7a2e2e;
+  background: #f3dede;
+}
+
+.finance-page__stats {
+  margin: 0 0 1.25rem;
+}
+
+.finance-page__xero-pill {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  margin-bottom: 0.15rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #4a3f66;
+  background: #ece8f5;
+  border: 1px solid #cfc6e4;
+}
+
+.finance-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.finance-tabs__btn {
+  border: none;
+  background: transparent;
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--txt-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -0.5rem;
+}
+
+.finance-tabs__btn--active {
+  color: var(--col-accent);
+  border-bottom-color: #8b7cb8;
+}
+
+.finance-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.finance-card {
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  padding: 1rem 1.1rem 0.75rem;
+}
+
+.finance-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.finance-card__title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--col-accent);
+}
+
+.finance-card__meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--txt-muted);
+}
+
+.finance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.finance-table th,
+.finance-table td {
+  text-align: left;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+
+.finance-table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--txt-muted);
+  font-weight: 700;
+}
+
+.finance-table--full {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+}
+
+.finance-page__footnote {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: var(--txt-muted);
 }
 
 .role-block__stat-row {

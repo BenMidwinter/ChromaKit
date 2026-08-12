@@ -36,7 +36,9 @@ import ServiceLeadServices from './features/service-lead/ServiceLeadServices'
 import ServiceLeadOverview from './features/service-lead/ServiceLeadOverview'
 import ServiceLeadUsers from './features/service-lead/ServiceLeadUsers'
 import NotesHistoryPanel from './features/client/NotesHistoryPanel'
+import SafeguardingPanel from './features/client/SafeguardingPanel'
 import Reporting from './components/Reporting'
+import FinancePage from './features/finance/FinancePage'
 
 export default function App() {
   return (
@@ -49,6 +51,7 @@ export default function App() {
         <Route path="home" element={<Home />} />
         <Route path="calendar" element={<Calendar />} />
         <Route path="reporting" element={<Reporting />} />
+        <Route path="finance" element={<FinancePage />} />
         <Route path="upcoming-appointments" element={<UpcomingAppointments />} />
         <Route path="active-cases" element={<ActiveCases />} />
         <Route path="clients" element={<AllClients />} />
@@ -127,6 +130,7 @@ export default function App() {
               ]}
             />
           } />
+          <Route path="safeguarding" element={<SafeguardingPanel />} />
         </Route>
 
         <Route path="workplace" element={<WorkplacePage />} />

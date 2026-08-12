@@ -8,8 +8,8 @@ describe('role block visibility', () => {
     expect(getVisibleWorkplaceBlocks(ROLES.CLINICIAN)).toEqual(['clinician'])
   })
 
-  it('shows administrator block only for administrators on home', () => {
-    expect(getVisibleHomeBlocks(ROLES.ADMINISTRATOR)).toEqual(['administrator'])
+  it('shows administrator and finance blocks for administrators on home', () => {
+    expect(getVisibleHomeBlocks(ROLES.ADMINISTRATOR)).toEqual(['administrator', 'admin_finance'])
   })
 
   it('shows management block for administrators and clinical leads at workplace', () => {
@@ -17,10 +17,11 @@ describe('role block visibility', () => {
     expect(getVisibleWorkplaceBlocks(ROLES.CLINICAL_LEAD)).toEqual(['administrator'])
   })
 
-  it('shows all three home blocks for clinical leads', () => {
+  it('shows clinician, ops, finance, and oversight home blocks for clinical leads', () => {
     expect(getVisibleHomeBlocks(ROLES.CLINICAL_LEAD)).toEqual([
       'clinician',
       'administrator',
+      'admin_finance',
       'clinical_lead',
     ])
   })

@@ -10,6 +10,7 @@ import {
   EDITOR_HIGHLIGHTS,
   EXPRESSIVE_SIZES,
   filterSlashCommands,
+  getSlashSnippet,
 } from '../lib/editorFormatting'
 import {
   IconUndo,
@@ -307,6 +308,11 @@ function runSlashCommand(editor, command, pickArtworkFile) {
     case 'divider':
       editor.chain().focus().setHorizontalRule().run()
       break
+    case 'insertSnippet': {
+      const html = getSlashSnippet(command.value)
+      if (html) editor.chain().focus().insertContent(html).run()
+      break
+    }
     default:
       break
   }

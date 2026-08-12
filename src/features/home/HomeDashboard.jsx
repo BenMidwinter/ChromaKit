@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   buildClinicianBlockData,
   buildAdministratorBlockData,
+  buildAdminFinanceBlockData,
   buildClinicalLeadBlockData,
   filterHomeOversightWorkplaces,
 } from '../../lib/homeBlocks'
 import { getVisibleHomeBlocks, ROLE_BLOCK_META } from '../../lib/roleBlocks'
 import HomeClinicianBlock from './HomeClinicianBlock'
 import HomeAdministratorBlock from './HomeAdministratorBlock'
+import HomeAdminFinanceBlock from './HomeAdminFinanceBlock'
 import HomeClinicalLeadBlock from './HomeClinicalLeadBlock'
 import HomeWorkplaceScopeTitle from './HomeWorkplaceScopeTitle'
 
@@ -51,6 +53,11 @@ export default function HomeDashboard({
     [session, oversightWorkplace],
   )
 
+  const financeData = useMemo(
+    () => buildAdminFinanceBlockData({ workplace: oversightWorkplace }),
+    [oversightWorkplace],
+  )
+
   const clinicalLeadData = useMemo(
     () => buildClinicalLeadBlockData({ session, workplace: oversightWorkplace, demoRole }),
     [session, oversightWorkplace, demoRole],
@@ -68,6 +75,18 @@ export default function HomeDashboard({
           title={(
             <HomeWorkplaceScopeTitle
               baseTitle={ROLE_BLOCK_META.administrator.title}
+              {...scopeTitleProps}
+            />
+          )}
+        />
+      )}
+      {blocks.includes('admin_finance') && (
+        <HomeAdminFinanceBlock
+          data={financeData}
+          blurNames={blurNames}
+          title={(
+            <HomeWorkplaceScopeTitle
+              baseTitle={ROLE_BLOCK_META.admin_finance.title}
               {...scopeTitleProps}
             />
           )}

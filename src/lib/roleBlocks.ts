@@ -1,7 +1,7 @@
 import { ROLES, normalizeRole } from './permissions'
 
 /** Home stacked blocks — top to bottom. */
-export const ROLE_BLOCK_ORDER = ['clinician', 'administrator', 'clinical_lead']
+export const ROLE_BLOCK_ORDER = ['clinician', 'administrator', 'admin_finance', 'clinical_lead']
 
 export const ROLE_BLOCK_META = {
   clinician: {
@@ -15,6 +15,12 @@ export const ROLE_BLOCK_META = {
     label: 'Administrator',
     title: 'Team operations',
     description: 'Workplace-wide sessions, cases, and attendance.',
+  },
+  admin_finance: {
+    id: 'admin_finance',
+    label: 'Administrator',
+    title: 'Timesheets, expenses & invoicing',
+    description: 'Payroll hours, expense claims, and invoice drafts — Xero sync coming later.',
   },
   clinical_lead: {
     id: 'clinical_lead',
@@ -65,13 +71,13 @@ export const PROFILE_BLOCK_META = {
 }
 
 /**
- * Home: clinicians see personal block only; administrators see team ops;
- * clinical leads see all three (personal, team ops, oversight).
+ * Home: clinicians see personal block only; administrators see team ops + finance;
+ * clinical leads see personal, team ops, finance, and oversight.
  */
 export function getVisibleHomeBlocks(personaRole) {
   const role = normalizeRole(personaRole)
   if (role === ROLES.CLINICAL_LEAD) return [...ROLE_BLOCK_ORDER]
-  if (role === ROLES.ADMINISTRATOR) return ['administrator']
+  if (role === ROLES.ADMINISTRATOR) return ['administrator', 'admin_finance']
   return ['clinician']
 }
 

@@ -276,6 +276,7 @@ export function canAccessClientNavSection(
     case 'forms':
     case 'contacts':
     case 'outcomes':
+    case 'safeguarding':
       return canManageRecords(workplaceContext, client, userId)
     default:
       return canAccessClient(client, userId, workplaceContext)
@@ -295,6 +296,29 @@ export function canAccessServiceLeadArea(demoRole?: string, user?: DemoUser | nu
   return demoRole === ROLES.SERVICE_LEAD || canAccessServiceLead(user)
 }
 
+/** Finance nav/page: administrators, clinical leads, and service leads only. */
+export function canAccessFinanceArea(demoRole?: string): boolean {
+  const role = normalizeRole(demoRole)
+  return (
+    role === ROLES.ADMINISTRATOR
+    || role === ROLES.CLINICAL_LEAD
+    || role === ROLES.SERVICE_LEAD
+  )
+}
+
+/**
+ * Close safeguarding concerns: clinical lead or service lead (org safeguarding oversight).
+ * Clinicians and administrators cannot close.
+ */
+export function canCloseSafeguardingConcern(
+  workplaceContext?: WorkplaceContext | null,
+  demoRole?: string,
+): boolean {
+  if (demoRole === ROLES.SERVICE_LEAD) return true
+  const role = getEffectiveRole(workplaceContext)
+  return role === ROLES.CLINICAL_LEAD
+}
+
 /** Workplace RBAC role used when the demo picker is on Service Lead. */
 export function workplaceRoleForDemo(demoRole?: string): string | undefined {
   return demoRole === ROLES.SERVICE_LEAD ? ROLES.CLINICAL_LEAD : demoRole
@@ -304,6 +328,7 @@ export function buildPermissions(
   workplaceContext?: WorkplaceContext | null,
   client?: Client | null,
   userId?: string,
+  demoRole?: string,
 ) {
   const role = getEffectiveRole(workplaceContext)
   return {
@@ -323,5 +348,7 @@ export function buildPermissions(
     canUseBodyMap: canUseBodyMap(workplaceContext, client, userId),
     canAccessClient: client ? canAccessClient(client, userId, workplaceContext) : true,
     canAssignAppointmentClinician: canAssignAppointmentClinician(workplaceContext, client),
+    canCloseSafeguardingConcern: canCloseSafeguardingConcern(workplaceContext, demoRole),
+    canAccessFinanceArea: canAccessFinanceArea(demoRole || role),
   }
 }

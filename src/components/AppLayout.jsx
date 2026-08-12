@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { CLINICIAN_PROFILES } from '../lib/mockData'
 import { getMyWorkplace } from '../lib/store'
 import { useWorkplaceContextsQuery, useStoreRefreshers } from '../lib/queries'
-import { ROLES, workplaceRoleForDemo } from '../lib/permissions'
+import { ROLES, workplaceRoleForDemo, canAccessFinanceArea } from '../lib/permissions'
 import { DEFAULT_PERSONA_ID, getPersonaById } from '../lib/demoPersonas'
 import DemoProfileSwitcher from './DemoProfileSwitcher'
 import ThemeToggle from './ThemeToggle'
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { to: '/calendar', label: 'Calendar' },
   { to: '/active-cases', label: 'Active Cases' },
   { to: '/clients', label: 'All Clients' },
+  { to: '/finance', label: 'Finance', financeOnly: true },
   { to: '/reporting', label: 'Reporting' },
 ]
 
@@ -112,6 +113,11 @@ export default function AppLayout() {
 
   const isProgressNotes = location.pathname.includes('/progress-notes')
 
+  const navItems = useMemo(
+    () => NAV_ITEMS.filter(item => !item.financeOnly || canAccessFinanceArea(demoRole)),
+    [demoRole],
+  )
+
   const appSession = useMemo(() => ({
     session,
     activePersona,
@@ -148,7 +154,7 @@ export default function AppLayout() {
           </NavLink>
 
           <nav className={`top-nav__links${menuOpen ? ' top-nav__links--open' : ''}`}>
-            {NAV_ITEMS.map(({ to, label, end }) => (
+            {navItems.map(({ to, label, end }) => (
               <NavLink
                 key={to}
                 to={to}

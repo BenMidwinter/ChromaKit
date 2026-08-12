@@ -4,6 +4,7 @@ import { sortLatestFirst, compareYmd, DEMO_TODAY } from './dateArchitecture'
 import { appointmentSchedule } from './appointmentUtils'
 import { buildLeadDashboard } from './leadDashboard'
 import { ROLES, normalizeRole } from './permissions'
+import { getFinanceMockForWorkplace } from './financeMock'
 
 /** Workplaces where the user has team-operations / oversight home blocks. */
 export function filterHomeOversightWorkplaces(workplaces: Array<{ role?: string }> = []) {
@@ -155,6 +156,11 @@ export function buildAdministratorBlockData({ session, workplace }) {
     upcoming,
     activeCases,
   }
+}
+
+/** Mock admin finance surfaces — not wired to Xero. */
+export function buildAdminFinanceBlockData({ workplace }) {
+  return getFinanceMockForWorkplace(workplace)
 }
 
 export function buildClinicalLeadBlockData({ session, workplace, demoRole }) {

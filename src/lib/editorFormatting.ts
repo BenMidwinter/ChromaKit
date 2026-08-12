@@ -51,6 +51,9 @@ export const EDITOR_HIGHLIGHTS = [
 ]
 
 export const SLASH_COMMANDS = [
+  { id: 'dapnotes', label: 'DAP notes', group: 'Clinical sections', action: 'insertSnippet', value: 'dapnotes' },
+  { id: 'consent', label: 'Consent record', group: 'Clinical sections', action: 'insertSnippet', value: 'consent' },
+  { id: 'safeguarding', label: 'Safeguarding note', group: 'Clinical sections', action: 'insertSnippet', value: 'safeguarding' },
   { id: 'size-large', label: 'Large text', group: 'Size', action: 'textSize', value: 'large' },
   { id: 'size-loud', label: 'Loud text', group: 'Expressive size', action: 'size', value: 'loud' },
   { id: 'size-bold', label: 'Bold & Bright', group: 'Expressive size', action: 'size', value: 'bold-bright' },
@@ -66,12 +69,54 @@ export const SLASH_COMMANDS = [
   { id: 'divider', label: 'Divider line', group: 'Structure', action: 'divider' },
 ]
 
+/** HTML snippets inserted by clinical slash commands (section-level, not full templates). */
+export const SLASH_SNIPPETS = {
+  dapnotes: `<h2>DAP notes</h2>
+<p><strong>Data</strong> — objective observations from the session:</p>
+<p></p>
+<p><strong>Assessment</strong> — clinical interpretation and formulation:</p>
+<p></p>
+<p><strong>Plan</strong> — next steps, goals, and follow-up:</p>
+<p></p>`,
+  consent: `<h2>Consent</h2>
+<p><strong>Discussion held with:</strong> </p>
+<p><strong>Date:</strong> </p>
+<p><strong>Capacity considered:</strong> </p>
+<ul>
+<li>Purpose of intervention explained</li>
+<li>Benefits and possible limitations discussed</li>
+<li>Confidentiality and information-sharing boundaries explained</li>
+<li>Right to withdraw consent explained</li>
+</ul>
+<p><strong>Consent outcome:</strong> </p>
+<p><strong>Clinician notes:</strong> </p>
+<p></p>`,
+  safeguarding: `<h2>Safeguarding</h2>
+<p><strong>Concern category:</strong> </p>
+<p><strong>Date / time identified:</strong> </p>
+<p><strong>People present / informed:</strong> </p>
+<p><strong>What was observed or disclosed:</strong></p>
+<p></p>
+<p><strong>Immediate actions taken:</strong></p>
+<p></p>
+<p><strong>Risk / urgency judgement:</strong> </p>
+<p><strong>Escalation:</strong> Log on client profile and link to MyConcern (see safeguarding concern workflow).</p>
+<p><strong>Follow-up required:</strong> </p>
+<p></p>`,
+}
+
 export function filterSlashCommands(query) {
   const q = query.trim().toLowerCase()
   if (!q) return SLASH_COMMANDS
   return SLASH_COMMANDS.filter(cmd =>
-    cmd.label.toLowerCase().includes(q) || cmd.group.toLowerCase().includes(q),
+    cmd.id.toLowerCase().includes(q)
+    || cmd.label.toLowerCase().includes(q)
+    || cmd.group.toLowerCase().includes(q),
   )
+}
+
+export function getSlashSnippet(id) {
+  return SLASH_SNIPPETS[id] || ''
 }
 
 export function fontCssForId(id) {
