@@ -142,18 +142,29 @@ export default function AppLayout() {
   ])
 
   return (
-    <div className="app-shell">
-      <header className="top-nav">
+    <div className={`app-shell${menuOpen ? ' app-shell--nav-open' : ''}`}>
+      <header className={`top-nav${menuOpen ? ' top-nav--open' : ''}`}>
         <div className="top-nav__inner">
-          <NavLink to="/home" className="top-nav__brand">
-            <span className="top-nav__brand-mark" aria-hidden="true" />
-            <span className="top-nav__brand-text">
-              <span className="top-nav__brand-name">Chroma</span>
-              <span className="top-nav__brand-suffix">tiK</span>
-            </span>
-          </NavLink>
+          <div className="top-nav__brand-row">
+            <NavLink to="/home" className="top-nav__brand">
+              <span className="top-nav__brand-mark" aria-hidden="true" />
+              <span className="top-nav__brand-text">
+                <span className="top-nav__brand-name">Chroma</span>
+                <span className="top-nav__brand-suffix">tiK</span>
+              </span>
+            </NavLink>
+            <button
+              type="button"
+              className="top-nav__menu-btn"
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+            >
+              {menuOpen ? '✕' : '☰'}
+            </button>
+          </div>
 
-          <nav className={`top-nav__links${menuOpen ? ' top-nav__links--open' : ''}`}>
+          <nav className="top-nav__links" aria-label="Primary">
             {navItems.map(({ to, label, end }) => (
               <NavLink
                 key={to}
@@ -168,15 +179,18 @@ export default function AppLayout() {
 
           <div className="top-nav__actions">
             <div className="top-nav__utilities">
-              <button
-                type="button"
-                className="top-nav__utility-btn"
-                onClick={handleBuildingClick}
-                aria-label={demoRole === ROLES.SERVICE_LEAD ? 'Organisation workplaces' : 'Workplace'}
-                title={demoRole === ROLES.SERVICE_LEAD ? 'Organisation workplaces' : 'Workplace'}
-              >
-                <BuildingIcon />
-              </button>
+              <div className="top-nav__utilities-row">
+                <button
+                  type="button"
+                  className="top-nav__utility-btn"
+                  onClick={handleBuildingClick}
+                  aria-label={demoRole === ROLES.SERVICE_LEAD ? 'Organisation workplaces' : 'Workplace'}
+                  title={demoRole === ROLES.SERVICE_LEAD ? 'Organisation workplaces' : 'Workplace'}
+                >
+                  <BuildingIcon />
+                </button>
+                <ThemeToggle />
+              </div>
               <button
                 type="button"
                 className="top-nav__profile-btn"
@@ -185,17 +199,40 @@ export default function AppLayout() {
               >
                 {activePersona.name}
               </button>
-              <ThemeToggle />
               <DemoProfileSwitcher value={personaId} onChange={handlePersonaChange} />
             </div>
-            <button type="button" className="top-nav__menu-btn" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
-              {menuOpen ? '✕' : '☰'}
-            </button>
           </div>
         </div>
       </header>
 
+      {menuOpen && (
+        <button
+          type="button"
+          className="top-nav__backdrop"
+          aria-label="Close menu"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
       <main className={`main-content${isProgressNotes ? ' main-content--progress-notes' : ''}`}>
+        <div className="top-nav__mobile-bar">
+          <NavLink to="/home" className="top-nav__brand top-nav__brand--compact">
+            <span className="top-nav__brand-mark" aria-hidden="true" />
+            <span className="top-nav__brand-text">
+              <span className="top-nav__brand-name">Chroma</span>
+              <span className="top-nav__brand-suffix">tiK</span>
+            </span>
+          </NavLink>
+          <button
+            type="button"
+            className="top-nav__menu-btn"
+            onClick={() => setMenuOpen(o => !o)}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? '✕' : '☰'}
+          </button>
+        </div>
         <RouteErrorBoundary>
           <AppSessionProvider value={appSession}>
             <Outlet />

@@ -979,10 +979,11 @@
   pointer-events: none;
 }
 
-/* Demo profile switcher in top nav */
+/* Demo profile switcher in side nav */
 .demo-profile-switcher__control {
-  min-width: 10.5rem;
-  max-width: 15rem;
+  min-width: 0;
+  max-width: none;
+  width: 100%;
 }
 
 .demo-profile-switcher__hint {

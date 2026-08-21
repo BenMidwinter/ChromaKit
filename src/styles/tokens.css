@@ -46,7 +46,9 @@
 
 :root {
   /* Layout & typography (theme-agnostic) */
-  --nav-height: 52px;
+  /* prototype-B: primary chrome is a left rail; top bar only on narrow viewports */
+  --nav-width: 13.75rem;
+  --nav-height: 0px;
   --space-inline: 1.75rem;
   --space-block: 1.25rem;
   --section-gap: 2rem;
@@ -72,7 +74,7 @@
 
   --layout-pane-width: 380px;
   --layout-pane-width-lg: 420px;
-  --layout-header-sticky-top: var(--nav-height);
+  --layout-header-sticky-top: 0px;
   --layout-transition-pane: 280ms cubic-bezier(0.4, 0, 0.2, 1);
   --layout-transition-fast: 150ms ease;
 

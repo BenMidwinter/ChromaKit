@@ -27,26 +27,44 @@ h1, h2, h3, h4 {
 a { color: var(--col-primary-dark); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.app-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
 
 .top-nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  height: var(--nav-height);
+  width: var(--nav-width);
+  flex: 0 0 var(--nav-width);
+  height: 100vh;
+  height: 100dvh;
   background: var(--bg-nav);
-  border-bottom: 2px solid var(--col-primary);
+  border-right: 2px solid var(--col-primary);
   box-shadow: none;
+  overflow: visible;
 }
 
 .top-nav__inner {
   width: 100%;
   height: 100%;
-  padding: 0 var(--space-inline);
+  padding: 1rem 0.85rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  position: relative;
+}
+
+.top-nav__brand-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  position: relative;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .top-nav__brand {
@@ -58,7 +76,8 @@ a:hover { text-decoration: underline; }
   color: var(--col-accent);
   text-decoration: none;
   white-space: nowrap;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .top-nav__brand-mark {
@@ -84,51 +103,70 @@ a:hover { text-decoration: underline; }
 
 .top-nav__links {
   display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex: 1;
-  overflow-x: auto;
-  scrollbar-width: none;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  padding-right: 0.15rem;
 }
 
-.top-nav__links::-webkit-scrollbar { display: none; }
-
 .top-nav__link {
-  padding: 0.4rem 0.75rem;
+  padding: 0.5rem 0.7rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--txt-muted);
   text-decoration: none;
   border-radius: 0;
   white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
+  border-left: 2px solid transparent;
+  margin-left: -0.15rem;
 }
 
 .top-nav__link:hover {
   color: var(--col-accent);
   background: transparent;
   text-decoration: none;
-  border-bottom-color: var(--border-color);
+  border-left-color: var(--border-color);
 }
 
 .top-nav__link--active {
   color: var(--col-secondary-dark);
   background: transparent;
   font-weight: 700;
-  border-bottom-color: var(--col-primary);
+  border-left-color: var(--col-primary);
 }
 
 .top-nav__actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   flex-shrink: 0;
   gap: 0.5rem;
-  margin-left: auto;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-light);
+  overflow: visible;
 }
 
 .top-nav__utilities {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.45rem;
+}
+
+.top-nav__utilities > .top-nav__utility-btn,
+.top-nav__utilities > .theme-toggle {
+  display: inline-flex;
+}
+
+.top-nav__utilities-row {
+  display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 0.35rem;
 }
@@ -161,6 +199,8 @@ a:hover { text-decoration: underline; }
 .top-nav__profile-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
+  width: 100%;
   height: 2.125rem;
   padding: 0 0.85rem;
   border: 1px solid var(--border-light);
@@ -172,6 +212,8 @@ a:hover { text-decoration: underline; }
   color: var(--col-accent);
   cursor: pointer;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 0.12s, border-color 0.12s, background 0.12s;
 }
 
@@ -183,6 +225,15 @@ a:hover { text-decoration: underline; }
 
 .top-nav__utilities .role-select {
   margin-right: 0;
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+.top-nav__utilities .role-select__control {
+  width: 100%;
+  max-width: none;
 }
 
 .top-nav__menu-btn {
@@ -196,12 +247,22 @@ a:hover { text-decoration: underline; }
   color: var(--col-accent);
 }
 
+.top-nav__mobile-bar {
+  display: none;
+}
+
+.top-nav__backdrop {
+  display: none;
+}
+
 .main-content {
   flex: 1;
   width: 100%;
   max-width: none;
+  min-width: 0;
   padding: 0;
-  min-height: calc(100vh - var(--nav-height));
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--bg-page);

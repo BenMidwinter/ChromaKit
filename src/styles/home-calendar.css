@@ -303,7 +303,7 @@
   }
 
   .top-nav__utilities .role-select__label {
-    display: none;
+    display: block;
   }
 }
 

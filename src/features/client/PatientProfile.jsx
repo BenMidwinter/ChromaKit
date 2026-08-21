@@ -44,12 +44,12 @@ export default function PatientProfile({ client: initialClient }) {
 
   return (
     <div className="page page--client">
-      <header className="flex flex-wrap items-stretch border-b-2 border-primary bg-surface">
-        <div className="flex min-w-44 flex-col justify-center gap-0.5 border-r border-line-light bg-gradient-to-br from-primary-light to-surface px-3.5 py-2.5">
-          <h1 className="m-0 text-[1.2rem] leading-tight">
+      <header className="client-shell__header">
+        <div className="client-shell__identity">
+          <h1>
             <BlurredName name={client.real_name} blur={blurNames} />
           </h1>
-          <p className="m-0 text-xs text-subtle">
+          <p className="client-shell__subtitle">
             DOB {client.dob}{assignmentHint}
           </p>
         </div>
@@ -60,7 +60,7 @@ export default function PatientProfile({ client: initialClient }) {
           onClientUpdated={handleClientUpdated}
         />
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 px-3.5 py-2">
+        <div className="client-shell__actions">
           <button
             type="button"
             className="secondary"
@@ -77,9 +77,9 @@ export default function PatientProfile({ client: initialClient }) {
 
       <ClientClinicalAlerts clientId={client.id} />
 
-      <div className="client-layout flex min-h-0 flex-1">
+      <div className="client-layout">
         <ClientNav clientId={client.id} client={client} />
-        <div className="client-layout__main min-w-0 flex-1">
+        <div className="client-layout__main">
           <Outlet context={{ client }} />
         </div>
       </div>
